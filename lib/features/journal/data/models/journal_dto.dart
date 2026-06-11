@@ -11,6 +11,8 @@ class JournalDto {
   final int intensity;
   final List<int> contextTagIds;
   final DateTime createdAt;
+  final String? aiFeedback; 
+  final String? aiPattern;
 
   JournalDto({
     required this.userId,
@@ -20,6 +22,8 @@ class JournalDto {
     required this.intensity,
     required this.contextTagIds,
     required this.createdAt,
+    this.aiFeedback,
+    this.aiPattern,
   });
 
   factory JournalDto.fromJson(Map<String, dynamic> json) => _$JournalDtoFromJson(json);

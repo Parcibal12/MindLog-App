@@ -17,6 +17,8 @@ class EditorController extends StateNotifier<AsyncValue<void>> {
     required String emotionName,
     required int intensity,
     required List<int> contextTagIds,
+    required String aiFeedback,
+    required String aiPattern,
   }) async {
     state = const AsyncLoading(); 
     try {
@@ -26,12 +28,26 @@ class EditorController extends StateNotifier<AsyncValue<void>> {
         emotionName: emotionName,
         intensity: intensity,
         contextTagIds: contextTagIds,
+        aiFeedback: aiFeedback,
+        aiPattern: aiPattern,
       );
       state = const AsyncData(null); 
       return true; 
     } catch (e, st) {
       state = AsyncError(e, st); 
       return false;
+    }
+  }
+
+  Future<Map<String, String>?> analyze(String content) async {
+    state = const AsyncLoading();
+    try {
+      final result = await _repository.analyzeContent(content);
+      state = const AsyncData(null);
+      return result;
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      return null;
     }
   }
 }

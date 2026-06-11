@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_app/core/theme/app_colors.dart';
 import '../providers/journal_draft_provider.dart';
+import '../providers/editor_controller.dart';
 import 'labeled_screen.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
@@ -20,16 +21,28 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     super.dispose();
   }
 
-  void _onNextPressed() {
+  void _onNextPressed() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    ref.read(journalContentDraftProvider.notifier).state = text;
+    FocusScope.of(context).unfocus();
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LabeledScreen()),
-    );
+    final aiResult = await ref.read(editorControllerProvider.notifier).analyze(text);
+
+    if (mounted && aiResult != null) {
+      ref.read(journalContentDraftProvider.notifier).state = text;
+      ref.read(aiFeedbackProvider.notifier).state = aiResult["feedback"]!;
+      ref.read(aiPatternProvider.notifier).state = aiResult["pattern"]!;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LabeledScreen()),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error al analizar el texto"), backgroundColor: Colors.redAccent),
+      );
+    }
   }
 
   @override

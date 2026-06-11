@@ -16,6 +16,8 @@ JournalDto _$JournalDtoFromJson(Map<String, dynamic> json) => JournalDto(
       .map((e) => (e as num).toInt())
       .toList(),
   createdAt: DateTime.parse(json['createdAt'] as String),
+  aiFeedback: json['aiFeedback'] as String?,
+  aiPattern: json['aiPattern'] as String?,
 );
 
 Map<String, dynamic> _$JournalDtoToJson(JournalDto instance) =>
@@ -27,4 +29,6 @@ Map<String, dynamic> _$JournalDtoToJson(JournalDto instance) =>
       'intensity': instance.intensity,
       'contextTagIds': instance.contextTagIds,
       'createdAt': instance.createdAt.toIso8601String(),
+      'aiFeedback': instance.aiFeedback,
+      'aiPattern': instance.aiPattern,
     };

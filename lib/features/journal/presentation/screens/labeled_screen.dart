@@ -47,8 +47,11 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
 
   void _handleSave(String content) async {
     final selectedEmotion = _emotions.firstWhere((e) => e.id == _selectedEmotionId);
-    
     final contextIds = _selectedContexts.map((c) => _contextOptions.indexOf(c) + 1).toList();
+    
+    // Leemos la IA que guardamos temporalmente cuando presionamos "Siguiente" en el editor
+    final feedback = ref.read(aiFeedbackProvider);
+    final pattern = ref.read(aiPatternProvider);
 
     final success = await ref.read(editorControllerProvider.notifier).saveEntry(
       content: content,
@@ -56,12 +59,13 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
       emotionName: selectedEmotion.label,
       intensity: _intensity.toInt(),
       contextTagIds: contextIds,
+      aiFeedback: feedback, // Lo enviamos a .NET
+      aiPattern: pattern,   // Lo enviamos a .NET
     );
 
     if (mounted) {
       if (success) {
         ref.invalidate(journalEntriesProvider);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Diario guardado con éxito"), backgroundColor: AppColors.primaryGreen),
         );
@@ -79,6 +83,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
     final journalContent = ref.watch(journalContentDraftProvider);
     final isLoading = ref.watch(editorControllerProvider).isLoading;
     final selectedEmotionData = _emotions.firstWhere((e) => e.id == _selectedEmotionId);
+    final aiFeedback = ref.watch(aiFeedbackProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -267,12 +272,10 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                               const Text("ESPEJO COGNITIVO", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F766E), letterSpacing: 0.6)),
                               const SizedBox(height: 8),
                               RichText(
-                                text: const TextSpan(
-                                  style: TextStyle(fontSize: 14, color: Color(0xCC134E4A), height: 1.6, fontWeight: FontWeight.w500),
+                                text: TextSpan(
+                                  style: const TextStyle(fontSize: 14, color: Color(0xCC134E4A), height: 1.6, fontWeight: FontWeight.w500),
                                   children: [
-                                    TextSpan(text: '"Nota de tu diario: Usaste palabras absolutistas como '),
-                                    TextSpan(text: 'siempre', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0F766E))),
-                                    TextSpan(text: '. Recuerda que un mal evento no define toda tu capacidad."'),
+                                    TextSpan(text: '"$aiFeedback"'),
                                   ],
                                 ),
                               ),

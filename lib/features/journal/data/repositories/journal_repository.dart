@@ -28,6 +28,8 @@ class JournalRepository {
     required String emotionName,
     required int intensity,
     required List<int> contextTagIds,
+    required String aiFeedback,
+    required String aiPattern
   }) async {
     try {
       final dto = JournalDto(
@@ -38,6 +40,8 @@ class JournalRepository {
         intensity: intensity,
         contextTagIds: contextTagIds,
         createdAt: DateTime.now(),
+        aiFeedback: aiFeedback,
+        aiPattern: aiPattern,
       );
       
       await _apiClient.createEntry(dto.toJson());
@@ -51,6 +55,18 @@ class JournalRepository {
       return await _apiClient.getEntries();
     } catch (e) {
       throw Exception("Error al obtener los diarios: $e");
+    }
+  }
+
+  Future<Map<String, String>> analyzeContent(String content) async {
+    try {
+      final data = await _apiClient.analyzeEntry({"content": content});
+      return {
+        "feedback": data["feedback"]?.toString() ?? "Reflexión generada.",
+        "pattern": data["pattern"]?.toString() ?? "NEUTRAL"
+      };
+    } catch (e) {
+      throw Exception("Error en IA: $e");
     }
   }
 }

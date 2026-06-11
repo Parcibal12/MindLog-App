@@ -13,4 +13,7 @@ abstract class JournalApiClient {
 
   @GET("Journal")
   Future<List<JournalDto>> getEntries();
+
+  @POST("Journal/analyze")
+  Future<dynamic> analyzeEntry(@Body() Map<String, dynamic> body);
 }
