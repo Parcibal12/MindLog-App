@@ -4,6 +4,7 @@ import 'package:mindlog_app/core/theme/app_colors.dart';
 import '../providers/home_controller.dart';
 import '../../data/models/journal_dto.dart';
 import 'editor_screen.dart';
+import 'report_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -80,28 +81,37 @@ class HomeScreen extends ConsumerWidget {
         child: const Icon(Icons.add, color: Colors.white, size: 28),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const BottomAppBar(
+      bottomNavigationBar: BottomAppBar(
         color: Colors.white,
-        shape: CircularNotchedRectangle(),
+        shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         height: 70,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Column(
+            const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.home_filled, color: AppColors.primaryDark),
                 Text("Inicio", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
               ],
             ),
-            SizedBox(width: 48),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bar_chart, color: AppColors.textSubtitle),
-                Text("Reportes", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textSubtitle)),
-              ],
+            const SizedBox(width: 48),
+            // <-- BOTÓN FUNCIONAL DE REPORTES -->
+            GestureDetector(
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ReportScreen()),
+                );
+              },
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.bar_chart, color: AppColors.textSubtitle),
+                  Text("Reportes", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textSubtitle)),
+                ],
+              ),
             ),
           ],
         ),
@@ -169,7 +179,6 @@ class _FilledState extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        // 1. Buscador Funcional Estilizado
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           decoration: BoxDecoration(
@@ -208,7 +217,7 @@ class _FilledState extends StatelessWidget {
               const Text("TU SEMANA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFF0FDFA), letterSpacing: 0.6)),
               const SizedBox(height: 8),
               Text("${entries.length} registros totales", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 16), // Espacio controlado adaptativo
+              const SizedBox(height: 16), 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../datasources/remote/journal_api_client.dart';
 import '../models/journal_dto.dart';
+import '../models/analytics_dto.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   return Dio();
@@ -67,6 +68,14 @@ class JournalRepository {
       };
     } catch (e) {
       throw Exception("Error en IA: $e");
+    }
+  }
+
+  Future<AnalyticsDto> getAnalytics() async {
+    try {
+      return await _apiClient.getAnalytics();
+    } catch (e) {
+      throw Exception("Error al obtener analíticas: $e");
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import '../../models/journal_dto.dart';
+import '../../models/analytics_dto.dart';
 
 part 'journal_api_client.g.dart';
 
@@ -16,4 +17,7 @@ abstract class JournalApiClient {
 
   @POST("Journal/analyze")
   Future<dynamic> analyzeEntry(@Body() Map<String, dynamic> body);
+
+  @GET("Journal/analytics")
+  Future<AnalyticsDto> getAnalytics();
 }
