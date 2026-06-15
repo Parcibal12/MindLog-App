@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import '../../models/journal_dto.dart';
 import '../../models/analytics_dto.dart';
+import '../../models/metadata_dto.dart';
 
 part 'journal_api_client.g.dart';
 
@@ -20,4 +21,10 @@ abstract class JournalApiClient {
 
   @GET("Journal/analytics")
   Future<AnalyticsDto> getAnalytics();
+
+  @GET("Journal/emotions")
+  Future<List<EmotionDto>> getEmotions();
+
+  @GET("Journal/tags")
+  Future<List<ContextTagDto>> getContextTags();
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
 import 'labeled_screen.dart';
@@ -61,10 +62,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     icon: const Icon(Icons.close, color: AppColors.textSubtitle),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Column(
+                  Column(
                     children: [
-                      Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1)),
-                      Text("10 de Diciembre", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textNumber)),
+                      const Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1)),
+                      Text(
+                        DateFormatter.formatFullDate(DateTime.now()), 
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textNumber)
+                      ),
                     ],
                   ),
                   ElevatedButton(

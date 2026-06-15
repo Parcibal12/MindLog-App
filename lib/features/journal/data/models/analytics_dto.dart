@@ -24,10 +24,13 @@ class AnalyticsDto {
 class ContextTagCountDto {
   final String tagName;
   final int count;
+  @JsonKey(defaultValue: "Ninguna")
+  final String dominantEmotion;
 
   ContextTagCountDto({
     required this.tagName,
     required this.count,
+    required this.dominantEmotion,
   });
 
   factory ContextTagCountDto.fromJson(Map<String, dynamic> json) => _$ContextTagCountDtoFromJson(json);

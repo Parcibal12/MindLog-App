@@ -27,7 +27,12 @@ ContextTagCountDto _$ContextTagCountDtoFromJson(Map<String, dynamic> json) =>
     ContextTagCountDto(
       tagName: json['tagName'] as String,
       count: (json['count'] as num).toInt(),
+      dominantEmotion: json['dominantEmotion'] as String? ?? 'Ninguna',
     );
 
 Map<String, dynamic> _$ContextTagCountDtoToJson(ContextTagCountDto instance) =>
-    <String, dynamic>{'tagName': instance.tagName, 'count': instance.count};
+    <String, dynamic>{
+      'tagName': instance.tagName,
+      'count': instance.count,
+      'dominantEmotion': instance.dominantEmotion,
+    };

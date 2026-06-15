@@ -1,27 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
 import '../providers/home_controller.dart';
-
-class EmotionItem {
-  final int id;
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  EmotionItem(this.id, this.label, this.icon, this.color);
-}
-
-final List<EmotionItem> _emotions = [
-  EmotionItem(1, "Calma", Icons.sentiment_satisfied_alt, const Color(0xFF14B8A6)), // Teal
-  EmotionItem(2, "Ansiedad", Icons.sentiment_dissatisfied, const Color(0xFFF59E0B)), // Naranja
-  EmotionItem(3, "Enojo", Icons.sentiment_very_dissatisfied, const Color(0xFFEF4444)), // Rojo
-  EmotionItem(4, "Tristeza", Icons.sentiment_neutral, const Color(0xFF3B82F6)), // Azul
-];
-
-final List<String> _contextOptions = ["Universidad", "Familia", "Trabajo", "Pareja", "Salud"];
+import '../../data/models/metadata_dto.dart'; 
 
 class LabeledScreen extends ConsumerStatefulWidget {
   const LabeledScreen({super.key});
@@ -31,36 +15,36 @@ class LabeledScreen extends ConsumerStatefulWidget {
 }
 
 class _LabeledScreenState extends ConsumerState<LabeledScreen> {
-  int _selectedEmotionId = 2;
+  int? _selectedEmotionId; 
+  EmotionDto? _selectedEmotionData;
   double _intensity = 8.0;
-  final List<String> _selectedContexts = ["Universidad"];
+  final List<int> _selectedContextIds = []; 
 
-  void _toggleContext(String ctx) {
+  void _toggleContext(int tagId) {
     setState(() {
-      if (_selectedContexts.contains(ctx)) {
-        _selectedContexts.remove(ctx);
+      if (_selectedContextIds.contains(tagId)) {
+        _selectedContextIds.remove(tagId);
       } else {
-        _selectedContexts.add(ctx);
+        _selectedContextIds.add(tagId);
       }
     });
   }
 
   void _handleSave(String content) async {
-    final selectedEmotion = _emotions.firstWhere((e) => e.id == _selectedEmotionId);
-    final contextIds = _selectedContexts.map((c) => _contextOptions.indexOf(c) + 1).toList();
-    
-    // Leemos la IA que guardamos temporalmente cuando presionamos "Siguiente" en el editor
+    final currentEmotion = _selectedEmotionData;
+    if (currentEmotion == null) return;
+
     final feedback = ref.read(aiFeedbackProvider);
     final pattern = ref.read(aiPatternProvider);
 
     final success = await ref.read(editorControllerProvider.notifier).saveEntry(
       content: content,
-      emotionId: selectedEmotion.id,
-      emotionName: selectedEmotion.label,
+      emotionId: currentEmotion.id,
+      emotionName: currentEmotion.name,
       intensity: _intensity.toInt(),
-      contextTagIds: contextIds,
-      aiFeedback: feedback, // Lo enviamos a .NET
-      aiPattern: pattern,   // Lo enviamos a .NET
+      contextTagIds: _selectedContextIds, 
+      aiFeedback: feedback,
+      aiPattern: pattern,
     );
 
     if (mounted) {
@@ -82,8 +66,13 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
   Widget build(BuildContext context) {
     final journalContent = ref.watch(journalContentDraftProvider);
     final isLoading = ref.watch(editorControllerProvider).isLoading;
-    final selectedEmotionData = _emotions.firstWhere((e) => e.id == _selectedEmotionId);
     final aiFeedback = ref.watch(aiFeedbackProvider);
+    
+    final emotionsAsync = ref.watch(emotionsProvider);
+    final tagsAsync = ref.watch(contextTagsProvider);
+    
+    final selectedPalette = EmotionThemeMapper.getPalette(_selectedEmotionData?.name ?? 'Calma');
+    final bool canSave = _selectedEmotionId != null && !isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -97,7 +86,6 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  
                   const Padding(
                     padding: EdgeInsets.only(left: 24, top: 16),
                     child: Column(
@@ -112,60 +100,72 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
 
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: Row(
-                      children: _emotions.map((em) {
-                        final isSelected = _selectedEmotionId == em.id;
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () => setState(() => _selectedEmotionId = em.id),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              height: 85,
-                              decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFFF0FDFA) : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected ? em.color : const Color(0xFFE2E8F0),
-                                  width: isSelected ? 1.5 : 1,
-                                ),
-                                boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
+                    child: emotionsAsync.when(
+                      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+                      error: (err, st) => Text("Error: $err", style: const TextStyle(color: Colors.red)),
+                      data: (emotions) {
+                        return Row(
+                          children: emotions.map((em) {
+                            final isSelected = _selectedEmotionId == em.id;
+                            final palette = EmotionThemeMapper.getPalette(em.name); 
+                            
+                            return Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() {
+                                  _selectedEmotionId = em.id;
+                                  _selectedEmotionData = em;
+                                }),
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  height: 85,
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? palette.lightBackground : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isSelected ? palette.main : const Color(0xFFE2E8F0),
+                                      width: isSelected ? 1.5 : 1,
+                                    ),
+                                    boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
+                                  ),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    alignment: Alignment.center,
                                     children: [
-                                      Icon(em.icon, size: 32, color: isSelected ? em.color : const Color(0xFF94A3B8)),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        em.label.toUpperCase(),
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                          color: isSelected ? em.color : const Color(0xFF94A3B8),
-                                          letterSpacing: 0.2,
-                                        ),
+                                      Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(palette.icon, size: 32, color: isSelected ? palette.main : const Color(0xFF94A3B8)),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            em.name.toUpperCase(),
+                                            style: TextStyle(
+                                              fontSize: 9,
+                                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                              color: isSelected ? palette.main : const Color(0xFF94A3B8),
+                                              letterSpacing: 0.2,
+                                            ),
+                                          ),
+                                        ],
                                       ),
+                                      if (isSelected)
+                                        Positioned(
+                                          top: -6,
+                                          right: -6,
+                                          child: Container(
+                                            width: 16,
+                                            height: 16,
+                                            decoration: BoxDecoration(color: palette.main, shape: BoxShape.circle),
+                                            child: const Icon(Icons.check, size: 10, color: Colors.white),
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                  if (isSelected)
-                                    Positioned(
-                                      top: -6,
-                                      right: -6,
-                                      child: Container(
-                                        width: 16,
-                                        height: 16,
-                                        decoration: BoxDecoration(color: em.color, shape: BoxShape.circle),
-                                        child: const Icon(Icons.check, size: 10, color: Colors.white),
-                                      ),
-                                    ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      }
                     ),
                   ),
 
@@ -179,7 +179,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                           children: [
                             const Text("Intensidad", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                             const Spacer(),
-                            Text(_intensity.toInt().toString(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: selectedEmotionData.color)),
+                            Text(_intensity.toInt().toString(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: selectedPalette.main)),
                             const Text("/10", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
                           ],
                         ),
@@ -194,7 +194,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                         ),
                         SliderTheme(
                           data: SliderThemeData(
-                            activeTrackColor: selectedEmotionData.color,
+                            activeTrackColor: selectedPalette.main,
                             inactiveTrackColor: const Color(0xFFE2E8F0),
                             thumbColor: Colors.white,
                             trackHeight: 8,
@@ -221,31 +221,38 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                         const SizedBox(height: 4),
                         const Text("Puedes seleccionar más de uno", style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8))),
                         const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _contextOptions.map((ctx) {
-                            final isSelected = _selectedContexts.contains(ctx);
-                            return GestureDetector(
-                              onTap: () => _toggleContext(ctx),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFF14B8A6) : Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: isSelected ? const Color(0xFF14B8A6) : const Color(0xFFE2E8F0)),
-                                ),
-                                child: Text(
-                                  ctx,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                    color: isSelected ? Colors.white : const Color(0xFF64748B),
+                        
+                        tagsAsync.when(
+                          loading: () => const CircularProgressIndicator(color: AppColors.primaryGreen),
+                          error: (err, st) => Text("Error", style: const TextStyle(color: Colors.red)),
+                          data: (tags) {
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: tags.map((tag) {
+                                final isSelected = _selectedContextIds.contains(tag.id);
+                                return GestureDetector(
+                                  onTap: () => _toggleContext(tag.id),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: isSelected ? AppColors.primaryGreen : Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0)),
+                                    ),
+                                    child: Text(
+                                      tag.name,
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
+                                );
+                              }).toList(),
                             );
-                          }).toList(),
+                          }
                         ),
                       ],
                     ),
@@ -255,25 +262,25 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                     margin: const EdgeInsets.all(24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [Color(0xFFF0FDFA), Color(0xFFECFDF5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      color: selectedPalette.lightBackground, 
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFCCFBF1)),
+                      border: Border.all(color: selectedPalette.main.withValues(alpha: 0.2)),
                       boxShadow: const [BoxShadow(color: Color(0x0C000000), blurRadius: 2, offset: Offset(0, 1))],
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.bolt, color: Color(0xFF14B8A6), size: 24),
+                        Icon(Icons.bolt, color: selectedPalette.main, size: 24),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("ESPEJO COGNITIVO", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF0F766E), letterSpacing: 0.6)),
+                              Text("ESPEJO COGNITIVO", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: selectedPalette.main, letterSpacing: 0.6)),
                               const SizedBox(height: 8),
                               RichText(
                                 text: TextSpan(
-                                  style: const TextStyle(fontSize: 14, color: Color(0xCC134E4A), height: 1.6, fontWeight: FontWeight.w500),
+                                  style: const TextStyle(fontSize: 14, color: Color(0xFF334155), height: 1.6, fontWeight: FontWeight.w500),
                                   children: [
                                     TextSpan(text: '"$aiFeedback"'),
                                   ],
@@ -320,12 +327,12 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                 boxShadow: [BoxShadow(color: Color(0x07000000), offset: Offset(0, -10), blurRadius: 10)],
               ),
               child: ElevatedButton(
-                onPressed: isLoading ? null : () => _handleSave(journalContent),
+                onPressed: canSave ? () => _handleSave(journalContent) : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF14B8A6),
+                  backgroundColor: canSave ? AppColors.primaryGreen : Colors.grey.shade400,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
-                  shadowColor: const Color(0x4D14B8A6),
+                  elevation: canSave ? 4 : 0,
+                  shadowColor: AppColors.primaryGreen.withValues(alpha: 0.3),
                 ),
                 child: isLoading
                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))

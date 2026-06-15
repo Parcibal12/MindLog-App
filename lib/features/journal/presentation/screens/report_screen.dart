@@ -1,30 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
+import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/report_controller.dart';
 import '../providers/home_controller.dart';
-import '../../data/models/journal_dto.dart';
 import 'home_screen.dart';
 import 'editor_screen.dart';
 import 'calendar_screen.dart';
+import 'dart:math';
 
 class ReportScreen extends ConsumerWidget {
   const ReportScreen({super.key});
 
-  Color _getEmotionColor(String emotionName) {
-    switch (emotionName.toLowerCase()) {
-      case 'ansiedad': return const Color(0xFFF97316);
-      case 'calma': return const Color(0xFF14B8A6);
-      case 'enojo': return const Color(0xFFA855F7);
-      case 'tristeza': return const Color(0xFF3B82F6);
-      default: return const Color(0xFF94A3B8);
-    }
+  EmotionPalette _getTriggerPalette(String tagName, String tagDominantEmotion) {
+    return EmotionThemeMapper.getPalette(tagDominantEmotion);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsState = ref.watch(analyticsProvider);
     final entriesState = ref.watch(journalEntriesProvider); 
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
@@ -55,6 +52,11 @@ class ReportScreen extends ConsumerWidget {
                 error: (err, _) => Center(child: Text("Error: $err", style: const TextStyle(color: Colors.red))),
                 data: (data) {
                   final mainTrigger = data.topDisparadores.isNotEmpty ? data.topDisparadores[0].tagName : 'No hay datos';
+                  final mainPalette = EmotionThemeMapper.getPalette(data.dominantEmotion);
+                  
+                  final int maxTriggerCount = data.topDisparadores.isNotEmpty 
+                      ? data.topDisparadores.map((t) => t.count).reduce(max) 
+                      : 1;
                   
                   return SingleChildScrollView(
                     padding: const EdgeInsets.only(bottom: 100),
@@ -64,9 +66,13 @@ class ReportScreen extends ConsumerWidget {
                           margin: const EdgeInsets.symmetric(horizontal: 24),
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(colors: [Color(0xFF14B8A6), Color(0xFF0F766E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                            gradient: LinearGradient(
+                              colors: mainPalette.gradient, 
+                              begin: Alignment.topLeft, 
+                              end: Alignment.bottomRight
+                            ),
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: const [BoxShadow(color: Color(0x3314B8A6), offset: Offset(0, 10), blurRadius: 15)],
+                            boxShadow: [BoxShadow(color: mainPalette.shadow, offset: const Offset(0, 10), blurRadius: 15)],
                           ),
                           child: Stack(
                             children: [
@@ -79,7 +85,7 @@ class ReportScreen extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.psychology, color: Color(0xFFCCFBF1), size: 24),
+                                    const Icon(Icons.lightbulb_outline, color: Color(0xFFCCFBF1), size: 28),
                                     const SizedBox(height: 8),
                                     const Text("PATRÓN DETECTADO", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFFF0FDFA), letterSpacing: 0.5)),
                                     const SizedBox(height: 8),
@@ -135,7 +141,7 @@ class ReportScreen extends ConsumerWidget {
                                 
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: ["L", "M", "M", "J", "V", "S", "D"].map((d) => 
+                                  children: DateFormatter.weekDaysInitials.map((d) => 
                                     Text(d, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8)))
                                   ).toList(),
                                 ),
@@ -153,10 +159,10 @@ class ReportScreen extends ConsumerWidget {
                                         final dayEntries = entries.where((e) => e.createdAt.toLocal().day == currentDay.day && e.createdAt.toLocal().month == currentDay.month).toList();
                                         
                                         if (dayEntries.isEmpty) {
-                                          return _buildDot(color: const Color(0xFFF1F5F9)); // Día vacío (Gris claro)
+                                          return _buildDot(color: const Color(0xFFF1F5F9)); 
                                         } else {
-                                          final color = _getEmotionColor(dayEntries.first.emotionName);
-                                          return _buildDot(color: color, shadow: color.withValues(alpha: 0.3)); // Día con diario
+                                          final dotPalette = EmotionThemeMapper.getPalette(dayEntries.first.emotionName);
+                                          return _buildDot(color: dotPalette.main, shadow: dotPalette.shadow); 
                                         }
                                       }),
                                     );
@@ -164,18 +170,20 @@ class ReportScreen extends ConsumerWidget {
                                   orElse: () => const CircularProgressIndicator(),
                                 ),
                                 
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFFF97316), shape: BoxShape.circle)),
-                                    const SizedBox(width: 6),
-                                    const Text("Ansiedad", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
-                                    const SizedBox(width: 16),
-                                    Container(width: 10, height: 10, decoration: const BoxDecoration(color: Color(0xFF14B8A6), shape: BoxShape.circle)),
-                                    const SizedBox(width: 6),
-                                    const Text("Calma", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
-                                  ],
+                                const SizedBox(height: 20),
+                                
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Wrap(
+                                    alignment: WrapAlignment.center,
+                                    spacing: 16, runSpacing: 8,
+                                    children: [
+                                      _buildLegendItem(EmotionThemeMapper.getPalette('calma').main, "Calma"),
+                                      _buildLegendItem(EmotionThemeMapper.getPalette('ansiedad').main, "Ansiedad"),
+                                      _buildLegendItem(EmotionThemeMapper.getPalette('enojo').main, "Enojo"),
+                                      _buildLegendItem(EmotionThemeMapper.getPalette('tristeza').main, "Tristeza"),
+                                    ],
+                                  ),
                                 )
                               ],
                             ),
@@ -206,7 +214,9 @@ class ReportScreen extends ConsumerWidget {
                                 const Text("Aún no hay suficientes datos.", style: TextStyle(color: Color(0xFF94A3B8))),
                               
                               ...data.topDisparadores.map((tag) {
-                                final double percentage = data.totalEntries > 0 ? (tag.count / data.totalEntries) * 100 : 0;
+                                final double fillRatio = (tag.count / maxTriggerCount).clamp(0.0, 1.0);
+                                final tagPalette = EmotionThemeMapper.getPalette(tag.dominantEmotion);
+                                
                                 return Padding(
                                   padding: const EdgeInsets.only(bottom: 16),
                                   child: Column(
@@ -224,10 +234,11 @@ class ReportScreen extends ConsumerWidget {
                                         decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(10)),
                                         child: FractionallySizedBox(
                                           alignment: Alignment.centerLeft,
-                                          widthFactor: percentage > 1 ? 1 : percentage,
+                                          widthFactor: fillRatio,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              color: data.topDisparadores.indexOf(tag) % 2 == 0 ? const Color(0xFFF97316) : const Color(0xFF14B8A6), 
+                                              // <-- COLORES BASADOS EN LA PALETA -->
+                                              color: tagPalette.main.withValues(alpha: data.topDisparadores.indexOf(tag) % 2 == 0 ? 1.0 : 0.6), 
                                               borderRadius: BorderRadius.circular(10)
                                             ),
                                           ),
@@ -263,7 +274,11 @@ class ReportScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             GestureDetector(
-              onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen())),
+              onTap: () {
+                ref.invalidate(analyticsProvider);
+                ref.invalidate(journalEntriesProvider);
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+              },
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -294,6 +309,17 @@ class ReportScreen extends ConsumerWidget {
         shape: BoxShape.circle,
         boxShadow: shadow != null ? [BoxShadow(color: shadow, offset: const Offset(0, 4), blurRadius: 6)] : null,
       ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+      ],
     );
   }
 }

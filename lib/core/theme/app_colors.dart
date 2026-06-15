@@ -17,4 +17,6 @@ class AppColors {
   static const Color anxietyOrange = Color(0xFFF97316);
   static const Color angerPurple = Color(0xFFA855F7);
   static const Color sadnessBlue = Color(0xFF3B82F6);
+  static const Color calmTeal = primaryGreen;
+  static const Color neutralGray = textSubtitle;
 }

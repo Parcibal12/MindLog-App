@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../datasources/remote/journal_api_client.dart';
 import '../models/journal_dto.dart';
 import '../models/analytics_dto.dart';
+import '../models/metadata_dto.dart';
 
 final dioProvider = Provider<Dio>((ref) {
   return Dio();
@@ -76,6 +77,22 @@ class JournalRepository {
       return await _apiClient.getAnalytics();
     } catch (e) {
       throw Exception("Error al obtener analíticas: $e");
+    }
+  }
+
+  Future<List<EmotionDto>> getEmotions() async {
+    try {
+      return await _apiClient.getEmotions();
+    } catch (e) {
+      throw Exception("Error al obtener emociones: $e");
+    }
+  }
+
+  Future<List<ContextTagDto>> getContextTags() async {
+    try {
+      return await _apiClient.getContextTags();
+    } catch (e) {
+      throw Exception("Error al obtener contextos: $e");
     }
   }
 }

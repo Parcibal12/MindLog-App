@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
+import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/home_controller.dart';
+import '../providers/report_controller.dart';
 import '../../data/models/journal_dto.dart';
 import 'editor_screen.dart';
 import 'report_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
-
-  String _getCurrentFormattedDate() {
-    final now = DateTime.now();
-    final weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-    final months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-    return "${weekdays[now.weekday % 7]}, ${now.day} ${months[now.month - 1]}";
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _getCurrentFormattedDate().toUpperCase(),
+                        DateFormatter.formatShortDate(DateTime.now()),
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 0.55),
                       ),
                       const SizedBox(height: 4),
@@ -97,9 +93,9 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(width: 48),
-            // <-- BOTÓN FUNCIONAL DE REPORTES -->
             GestureDetector(
               onTap: () {
+                ref.invalidate(analyticsProvider);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => const ReportScreen()),
@@ -158,9 +154,7 @@ class _FilledState extends StatelessWidget {
       } else if (compareDate == yesterday) {
         key = "AYER";
       } else {
-        final weekdays = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-        final months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-        key = "${weekdays[localDate.weekday % 7]}, ${localDate.day} ${months[localDate.month - 1]}".toUpperCase();
+        key = DateFormatter.formatShortDate(localDate);
       }
 
       if (!groups.containsKey(key)) {
@@ -175,6 +169,8 @@ class _FilledState extends StatelessWidget {
   Widget build(BuildContext context) {
     final groupedEntries = _groupEntriesByDate();
     final dominantEmotion = _calculateDominantEmotion();
+    
+    final palette = EmotionThemeMapper.getPalette(dominantEmotion);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -202,13 +198,13 @@ class _FilledState extends StatelessWidget {
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF14B8A6), Color(0xFF0F766E)],
+            gradient: LinearGradient(
+              colors: palette.gradient,
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [BoxShadow(color: Color(0x3314B8A6), offset: Offset(0, 10), blurRadius: 15)],
+            boxShadow: [BoxShadow(color: palette.shadow, offset: const Offset(0, 10), blurRadius: 15)],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,26 +259,6 @@ class _EntryCard extends StatelessWidget {
 
   const _EntryCard({required this.entry});
 
-  Color _getEmotionColor() {
-    switch (entry.emotionName.toLowerCase()) {
-      case 'ansiedad': return const Color(0xFFF59E0B);
-      case 'calma': return const Color(0xFF14B8A6);
-      case 'enojo': return const Color(0xFFEF4444);
-      case 'tristeza': return const Color(0xFF3B82F6);
-      default: return const Color(0xFF94A3B8);
-    }
-  }
-
-  IconData _getEmotionIcon() {
-    switch (entry.emotionName.toLowerCase()) {
-      case 'ansiedad': return Icons.sentiment_dissatisfied;
-      case 'calma': return Icons.sentiment_satisfied_alt;
-      case 'enojo': return Icons.sentiment_very_dissatisfied;
-      case 'tristeza': return Icons.sentiment_neutral;
-      default: return Icons.circle;
-    }
-  }
-
   String _formatTime(DateTime dateTime) {
     final local = dateTime.toLocal();
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
@@ -293,8 +269,7 @@ class _EntryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color mainColor = _getEmotionColor();
-    final Color lightColor = mainColor.withValues(alpha: 0.1);
+    final palette = EmotionThemeMapper.getPalette(entry.emotionName);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
@@ -313,16 +288,16 @@ class _EntryCard extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: lightColor, shape: BoxShape.circle),
-                child: Icon(_getEmotionIcon(), color: mainColor, size: 24),
+                decoration: BoxDecoration(color: palette.lightBackground, shape: BoxShape.circle),
+                child: Icon(palette.icon, color: palette.main, size: 24), // <-- ICONO Y COLOR DINÁMICO
               ),
               const SizedBox(width: 12),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: lightColor, borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: palette.lightBackground, borderRadius: BorderRadius.circular(6)),
                 child: Text(
                   entry.emotionName.toUpperCase(),
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: mainColor, letterSpacing: 0.25),
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: palette.main, letterSpacing: 0.25),
                 ),
               ),
               const Spacer(),
