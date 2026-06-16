@@ -77,15 +77,40 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _FilledState extends ConsumerWidget {
+// Convertido a Stateful para manejar el TextEditingController y evitar el bug de onChanged
+class _FilledState extends ConsumerStatefulWidget {
   final List<JournalDto> entries;
 
   const _FilledState({required this.entries});
 
-  String _calculateDominantEmotion() {
-    if (entries.isEmpty) return "Ninguna";
+  @override
+  ConsumerState<_FilledState> createState() => _FilledStateState();
+}
+
+class _FilledStateState extends ConsumerState<_FilledState> {
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    
+    // Escuchamos el controlador y actualizamos el Provider dinámicamente
+    _searchController.addListener(() {
+      ref.read(searchQueryProvider.notifier).state = _searchController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  String _calculateDominantEmotion(List<JournalDto> listToAnalyze) {
+    if (listToAnalyze.isEmpty) return "Ninguna";
     final Map<String, int> frequencyMap = {};
-    for (var entry in entries) {
+    for (var entry in listToAnalyze) {
       frequencyMap[entry.emotionName] = (frequencyMap[entry.emotionName] ?? 0) + 1;
     }
     String dominant = frequencyMap.keys.first;
@@ -99,13 +124,13 @@ class _FilledState extends ConsumerWidget {
     return dominant;
   }
 
-  Map<String, List<JournalDto>> _groupEntriesByDate() {
+  Map<String, List<JournalDto>> _groupEntriesByDate(List<JournalDto> listToGroup) {
     final Map<String, List<JournalDto>> groups = {};
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(const Duration(days: 1));
 
-    for (var entry in entries) {
+    for (var entry in listToGroup) {
       final localDate = entry.createdAt.toLocal();
       final compareDate = DateTime(localDate.year, localDate.month, localDate.day);
       
@@ -127,21 +152,29 @@ class _FilledState extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final groupedEntries = _groupEntriesByDate();
-    final dominantEmotion = _calculateDominantEmotion();
-    final palette = EmotionThemeMapper.getPalette(dominantEmotion);
+  Widget build(BuildContext context) {
+    final searchQuery = ref.watch(searchQueryProvider);
+    
+    final filteredEntries = widget.entries.where((entry) {
+      final query = searchQuery.toLowerCase();
+      return entry.content.toLowerCase().contains(query) || 
+             entry.emotionName.toLowerCase().contains(query);
+    }).toList();
 
+    final groupedEntries = _groupEntriesByDate(filteredEntries);
+    final dominantEmotion = _calculateDominantEmotion(widget.entries);
+    final palette = EmotionThemeMapper.getPalette(dominantEmotion);
     final streakAsync = ref.watch(currentStreakProvider);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: MindLogTextField(
             hintText: "Buscar en tu diario...",
             prefixIcon: Icons.search,
+            controller: _searchController, // <-- Usamos el controlador que tu app sí reconoce
           ),
         ),
 
@@ -163,7 +196,7 @@ class _FilledState extends ConsumerWidget {
             children: [
               const Text("TU SEMANA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFF0FDFA), letterSpacing: 0.6)),
               const SizedBox(height: 8),
-              Text("${entries.length} registros totales", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+              Text("${widget.entries.length} registros totales", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 16), 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -228,6 +261,18 @@ class _FilledState extends ConsumerWidget {
 
         const SizedBox(height: 8),
 
+        if (filteredEntries.isEmpty && searchQuery.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Center(
+              child: Text(
+                'No se encontraron resultados para "$searchQuery"',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSubtitle),
+              ),
+            ),
+          ),
+
         ...groupedEntries.keys.map((dateSection) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,13 +334,13 @@ class _EntryCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color:Color(0xFF94A3B8))),
+              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8))),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             entry.content,
-            style: const TextStyle(fontSize: 14, color:Color(0xFF475569), height: 1.5),
+            style: const TextStyle(fontSize: 14, color: const Color(0xFF475569), height: 1.5),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

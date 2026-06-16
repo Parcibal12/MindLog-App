@@ -14,3 +14,5 @@ final currentStreakProvider = FutureProvider<int>((ref) async {
   
   return await repository.getCurrentStreak(myUserId);
 });
+
+final searchQueryProvider = StateProvider<String>((ref) => '');
