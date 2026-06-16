@@ -432,7 +432,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "3128624fd03b11b4db10afa42d2abc26ee43d675"
+      resolved-ref: "42894eb5f2c7da38674201351065a0405b84d290"
       url: "https://github.com/Parcibal12/mindlog_design_system.git"
     source: git
     version: "0.0.1"

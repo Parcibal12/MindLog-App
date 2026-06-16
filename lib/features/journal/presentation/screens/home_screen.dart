@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 import '../providers/home_controller.dart';
 import '../../data/models/journal_dto.dart';
 
@@ -36,16 +37,24 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDFA),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFCCFBF1)),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      );
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDFA),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFCCFBF1)),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text("D", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
                     ),
-                    alignment: Alignment.center,
-                    child: const Text("D", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
                   ),
                 ],
               ),
