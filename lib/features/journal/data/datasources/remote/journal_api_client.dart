@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 import '../../models/journal_dto.dart';
 import '../../models/analytics_dto.dart';
 import '../../models/metadata_dto.dart';
+import '../../models/streak_dto.dart';
 
 part 'journal_api_client.g.dart';
 
@@ -27,4 +28,7 @@ abstract class JournalApiClient {
 
   @GET("Journal/tags")
   Future<List<ContextTagDto>> getContextTags();
+
+  @GET('/Journal/streak/{userId}')
+  Future<StreakDto> getCurrentStreak(@Path('userId') String userId);
 }

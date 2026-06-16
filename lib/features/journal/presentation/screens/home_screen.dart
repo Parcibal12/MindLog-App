@@ -77,7 +77,7 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _FilledState extends StatelessWidget {
+class _FilledState extends ConsumerWidget {
   final List<JournalDto> entries;
 
   const _FilledState({required this.entries});
@@ -127,11 +127,12 @@ class _FilledState extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final groupedEntries = _groupEntriesByDate();
     final dominantEmotion = _calculateDominantEmotion();
-    
     final palette = EmotionThemeMapper.getPalette(dominantEmotion);
+
+    final streakAsync = ref.watch(currentStreakProvider);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
@@ -183,6 +184,49 @@ class _FilledState extends StatelessWidget {
             ],
           ),
         ),
+
+        streakAsync.when(
+          data: (streak) => MindLogCard(
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFFF7ED),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF97316), size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        streak > 0 ? "¡Racha de $streak días!" : "Inicia tu racha hoy",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textHeader),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        streak > 0 ? "Sigue escribiendo para no perderla." : "Registra cómo te sientes.",
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+          ),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+
+        const SizedBox(height: 8),
 
         ...groupedEntries.keys.map((dateSection) {
           return Column(

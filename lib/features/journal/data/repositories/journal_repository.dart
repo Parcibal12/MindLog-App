@@ -98,4 +98,14 @@ class JournalRepository {
       throw Exception("Error al obtener contextos: $e");
     }
   }
+
+  Future<int> getCurrentStreak(String userId) async {
+    try {
+      final response = await _apiClient.getCurrentStreak(userId);
+      
+      return response.currentStreak; 
+    } catch (e) {
+      return 0; 
+    }
+  }
 }
