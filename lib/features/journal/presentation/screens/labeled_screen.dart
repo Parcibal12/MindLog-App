@@ -20,6 +20,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
   double _intensity = 8.0;
   final List<int> _selectedContextIds = []; 
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedEmotionId = ref.read(draftEmotionIdProvider);
+    _intensity = ref.read(draftIntensityProvider).toDouble();
+    _selectedContextIds.addAll(ref.read(draftContextTagsProvider));
+  }
+
   void _toggleContext(int tagId) {
     setState(() {
       if (_selectedContextIds.contains(tagId)) {
@@ -104,6 +112,13 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
                       error: (err, st) => Text("Error: $err", style: const TextStyle(color: Colors.red)),
                       data: (emotions) {
+                        if (_selectedEmotionId != null && _selectedEmotionData == null) {
+                          Future.microtask(() {
+                            setState(() {
+                              _selectedEmotionData = emotions.firstWhere((e) => e.id == _selectedEmotionId);
+                            });
+                          });
+                        }
                         return Row(
                           children: emotions.map((em) {
                             final isSelected = _selectedEmotionId == em.id;

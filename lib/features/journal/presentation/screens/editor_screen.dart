@@ -34,6 +34,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       ref.read(journalContentDraftProvider.notifier).state = text;
       ref.read(aiFeedbackProvider.notifier).state = aiResult["feedback"]!;
       ref.read(aiPatternProvider.notifier).state = aiResult["pattern"]!;
+      ref.read(draftEmotionIdProvider.notifier).state = aiResult["emotionId"];
+      ref.read(draftIntensityProvider.notifier).state = aiResult["intensity"];
+      ref.read(draftContextTagsProvider.notifier).state = aiResult["contextTagIds"];
 
       Navigator.push(
         context,

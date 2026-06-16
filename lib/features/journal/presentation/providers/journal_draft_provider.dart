@@ -6,6 +6,9 @@ final journalContentDraftProvider = StateProvider<String>((ref) => '');
 
 final aiFeedbackProvider = StateProvider<String>((ref) => '');
 final aiPatternProvider = StateProvider<String>((ref) => '');
+final draftEmotionIdProvider = StateProvider<int?>((ref) => null);
+final draftIntensityProvider = StateProvider<int>((ref) => 5);
+final draftContextTagsProvider = StateProvider<List<int>>((ref) => []);
 
 final emotionsProvider = FutureProvider<List<EmotionDto>>((ref) async {
   final repository = ref.read(journalRepositoryProvider);

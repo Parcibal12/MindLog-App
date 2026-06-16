@@ -39,7 +39,7 @@ class EditorController extends StateNotifier<AsyncValue<void>> {
     }
   }
 
-  Future<Map<String, String>?> analyze(String content) async {
+  Future<Map<String, dynamic>?> analyze(String content) async {
     state = const AsyncLoading();
     try {
       final result = await _repository.analyzeContent(content);

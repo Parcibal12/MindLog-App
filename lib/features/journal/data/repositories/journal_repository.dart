@@ -60,12 +60,15 @@ class JournalRepository {
     }
   }
 
-  Future<Map<String, String>> analyzeContent(String content) async {
+  Future<Map<String, dynamic>> analyzeContent(String content) async {
     try {
       final data = await _apiClient.analyzeEntry({"content": content});
       return {
         "feedback": data["feedback"]?.toString() ?? "Reflexión generada.",
-        "pattern": data["pattern"]?.toString() ?? "NEUTRAL"
+        "pattern": data["pattern"]?.toString() ?? "NEUTRAL",
+        "emotionId": data["emotionId"] as int? ?? 1,
+        "intensity": data["intensity"] as int? ?? 5,
+        "contextTagIds": List<int>.from(data["contextTagIds"] ?? [])
       };
     } catch (e) {
       throw Exception("Error en IA: $e");
