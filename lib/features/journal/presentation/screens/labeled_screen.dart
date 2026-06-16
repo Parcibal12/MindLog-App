@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mindlog_app/core/theme/app_colors.dart';
-import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
 import '../providers/home_controller.dart';
@@ -341,24 +340,11 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                 border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
                 boxShadow: [BoxShadow(color: Color(0x07000000), offset: Offset(0, -10), blurRadius: 10)],
               ),
-              child: ElevatedButton(
+              child: MindLogButton(
+                text: isLoading ? "Guardando..." : "Guardar Entrada",
+                isFullWidth: true,
+                backgroundColor: canSave ? AppColors.primaryGreen : Colors.grey.shade400,
                 onPressed: canSave ? () => _handleSave(journalContent) : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: canSave ? AppColors.primaryGreen : Colors.grey.shade400,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: canSave ? 4 : 0,
-                  shadowColor: AppColors.primaryGreen.withValues(alpha: 0.3),
-                ),
-                child: isLoading
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.check, color: Colors.white, size: 20),
-                          SizedBox(width: 12),
-                          Text("Guardar Entrada", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                        ],
-                      ),
               ),
             ),
           ),

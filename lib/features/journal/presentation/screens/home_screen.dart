@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mindlog_app/core/theme/app_colors.dart';
-import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/home_controller.dart';
 import '../../data/models/journal_dto.dart';
@@ -128,22 +127,11 @@ class _FilledState extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
       children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFF1F5F9)),
-            boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
-          ),
-          child: const TextField(
-            decoration: InputDecoration(
-              hintText: "Buscar en tu diario...",
-              hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
-              prefixIcon: Icon(Icons.search, color: Color(0xFF94A3B8), size: 20),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 14),
-            ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: MindLogTextField(
+            hintText: "Buscar en tu diario...",
+            prefixIcon: Icons.search,
           ),
         ),
 
@@ -224,15 +212,9 @@ class _EntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = EmotionThemeMapper.getPalette(entry.emotionName);
 
-    return Container(
+    return MindLogCard(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        boxShadow: const [BoxShadow(color: Color(0x05000000), offset: Offset(0, 2), blurRadius: 5)],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -242,7 +224,7 @@ class _EntryCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(color: palette.lightBackground, shape: BoxShape.circle),
-                child: Icon(palette.icon, color: palette.main, size: 24), // <-- ICONO Y COLOR DINÁMICO
+                child: Icon(palette.icon, color: palette.main, size: 24),
               ),
               const SizedBox(width: 12),
               Container(
@@ -254,13 +236,13 @@ class _EntryCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
+              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color:Color(0xFF94A3B8))),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             entry.content,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF475569), height: 1.5),
+            style: const TextStyle(fontSize: 14, color:Color(0xFF475569), height: 1.5),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

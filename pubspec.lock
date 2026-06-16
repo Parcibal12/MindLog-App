@@ -427,6 +427,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  mindlog_design_system:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "3128624fd03b11b4db10afa42d2abc26ee43d675"
+      url: "https://github.com/Parcibal12/mindlog_design_system.git"
+    source: git
+    version: "0.0.1"
   objective_c:
     dependency: transitive
     description:

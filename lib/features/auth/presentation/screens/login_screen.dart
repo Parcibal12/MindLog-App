@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../core/theme/app_colors.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 
 final pinProvider = StateProvider<String>((ref) => '');
 

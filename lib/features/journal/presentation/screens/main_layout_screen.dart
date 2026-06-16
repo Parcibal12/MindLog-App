@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 import '../providers/home_controller.dart';
 import '../providers/report_controller.dart';
 import 'home_screen.dart';

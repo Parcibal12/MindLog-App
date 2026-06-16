@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
@@ -74,15 +74,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       ),
                     ],
                   ),
-                  ElevatedButton(
+                  MindLogButton(
+                    text: "Siguiente",
                     onPressed: _onNextPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                    ),
-                    child: const Text("Siguiente", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ],
               ),
