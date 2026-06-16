@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/journal/presentation/screens/home_screen.dart';
+import 'features/journal/presentation/screens/main_layout_screen.dart';
 void main() {
-  // ProviderScope es OBLIGATORIO para que Riverpod funcione en toda la app
   runApp(const ProviderScope(child: MindLogApp()));
 }
 
@@ -19,7 +18,7 @@ class MindLogApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Inter',
       ),
-      home: const HomeScreen(),
+      home: const MainLayoutScreen(),
     );
   }
 }

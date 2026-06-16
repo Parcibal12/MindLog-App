@@ -5,22 +5,17 @@ import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/report_controller.dart';
 import '../providers/home_controller.dart';
-import 'home_screen.dart';
-import 'editor_screen.dart';
+import '../providers/journal_draft_provider.dart';
 import 'calendar_screen.dart';
 import 'dart:math';
 
 class ReportScreen extends ConsumerWidget {
   const ReportScreen({super.key});
-
-  EmotionPalette _getTriggerPalette(String tagName, String tagDominantEmotion) {
-    return EmotionThemeMapper.getPalette(tagDominantEmotion);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsState = ref.watch(analyticsProvider);
     final entriesState = ref.watch(journalEntriesProvider); 
+    final emotionsState = ref.watch(emotionsProvider);
     
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -174,15 +169,21 @@ class ReportScreen extends ConsumerWidget {
                                 
                                 SizedBox(
                                   width: double.infinity,
-                                  child: Wrap(
-                                    alignment: WrapAlignment.center,
-                                    spacing: 16, runSpacing: 8,
-                                    children: [
-                                      _buildLegendItem(EmotionThemeMapper.getPalette('calma').main, "Calma"),
-                                      _buildLegendItem(EmotionThemeMapper.getPalette('ansiedad').main, "Ansiedad"),
-                                      _buildLegendItem(EmotionThemeMapper.getPalette('enojo').main, "Enojo"),
-                                      _buildLegendItem(EmotionThemeMapper.getPalette('tristeza').main, "Tristeza"),
-                                    ],
+                                  child: emotionsState.when(
+                                    loading: () => const Center(
+                                      child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                    ),
+                                    error: (err, _) => const Text("Error al cargar leyenda", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.red)),
+                                    data: (emotions) {
+                                      return Wrap(
+                                        alignment: WrapAlignment.center,
+                                        spacing: 16, runSpacing: 8,
+                                        children: emotions.map((em) {
+                                          final label = em.name[0].toUpperCase() + em.name.substring(1).toLowerCase();
+                                          return _buildLegendItem(EmotionThemeMapper.getPalette(em.name).main, label);
+                                        }).toList(),
+                                      );
+                                    },
                                   ),
                                 )
                               ],
@@ -237,7 +238,6 @@ class ReportScreen extends ConsumerWidget {
                                           widthFactor: fillRatio,
                                           child: Container(
                                             decoration: BoxDecoration(
-                                              // <-- COLORES BASADOS EN LA PALETA -->
                                               color: tagPalette.main.withValues(alpha: data.topDisparadores.indexOf(tag) % 2 == 0 ? 1.0 : 0.6), 
                                               borderRadius: BorderRadius.circular(10)
                                             ),
@@ -256,44 +256,6 @@ class ReportScreen extends ConsumerWidget {
                   );
                 },
               ),
-            ),
-          ],
-        ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EditorScreen())),
-        backgroundColor: AppColors.primaryGreen,
-        elevation: 8, shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white, shape: const CircularNotchedRectangle(), notchMargin: 8.0, height: 70,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            GestureDetector(
-              onTap: () {
-                ref.invalidate(analyticsProvider);
-                ref.invalidate(journalEntriesProvider);
-                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-              },
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.home_outlined, color: AppColors.textSubtitle),
-                  Text("Inicio", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textSubtitle)),
-                ],
-              ),
-            ),
-            const SizedBox(width: 48),
-            const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bar_chart, color: AppColors.primaryDark),
-                Text("Reportes", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
-              ],
             ),
           ],
         ),
@@ -318,7 +280,7 @@ class ReportScreen extends ConsumerWidget {
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color:Color(0xFF64748B))),
       ],
     );
   }

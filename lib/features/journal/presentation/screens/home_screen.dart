@@ -4,10 +4,7 @@ import 'package:mindlog_app/core/theme/app_colors.dart';
 import 'package:mindlog_app/core/theme/emotion_theme_mapper.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/home_controller.dart';
-import '../providers/report_controller.dart';
 import '../../data/models/journal_dto.dart';
-import 'editor_screen.dart';
-import 'report_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -63,50 +60,6 @@ class HomeScreen extends ConsumerWidget {
                   if (entries.isEmpty) return const _EmptyState();
                   return _FilledState(entries: entries);
                 },
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const EditorScreen())),
-        backgroundColor: AppColors.primaryGreen,
-        elevation: 8,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        height: 70,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.home_filled, color: AppColors.primaryDark),
-                Text("Inicio", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
-              ],
-            ),
-            const SizedBox(width: 48),
-            GestureDetector(
-              onTap: () {
-                ref.invalidate(analyticsProvider);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReportScreen()),
-                );
-              },
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.bar_chart, color: AppColors.textSubtitle),
-                  Text("Reportes", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textSubtitle)),
-                ],
               ),
             ),
           ],

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/journal_dto.dart';
 import '../providers/home_controller.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {

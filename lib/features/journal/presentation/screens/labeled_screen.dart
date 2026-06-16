@@ -224,7 +224,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                         
                         tagsAsync.when(
                           loading: () => const CircularProgressIndicator(color: AppColors.primaryGreen),
-                          error: (err, st) => Text("Error", style: const TextStyle(color: Colors.red)),
+                          error: (err, st) => const Text("Error", style: TextStyle(color: Colors.red)),
                           data: (tags) {
                             return Wrap(
                               spacing: 8,
