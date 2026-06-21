@@ -1,8 +1,18 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/datasources/remote/profile_api_client.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../data/models/update_profile_dto.dart';
 
-final profileRepositoryProvider = Provider((ref) => ProfileRepository());
+final dioProvider = Provider((ref) => Dio());
+
+final profileApiClientProvider = Provider((ref) {
+  return ProfileApiClient(ref.read(dioProvider));
+});
+
+final profileRepositoryProvider = Provider((ref) {
+  return ProfileRepository(ref.read(profileApiClientProvider));
+});
 
 final profileControllerProvider = StateNotifierProvider<ProfileController, AsyncValue<void>>((ref) {
   return ProfileController(ref.read(profileRepositoryProvider));
