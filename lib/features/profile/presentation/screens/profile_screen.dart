@@ -120,7 +120,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
 
-                  // Section Title
                   const Padding(
                     padding: EdgeInsets.only(left: 28, top: 16, bottom: 8),
                     child: Text("CONEXIÓN PROFESIONAL", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.55)),
@@ -254,44 +253,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32, height: 32,
-                                decoration: const BoxDecoration(color: Color(0xFFF8FAFC), shape: BoxShape.circle),
-                                child: const Icon(Icons.dark_mode_outlined, color: Color(0xFF64748B), size: 16),
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(child: Text("Modo Oscuro", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF334155)))),
-                              MindLogSwitch(value: darkMode, onChanged: (val) => setState(() => darkMode = val)),
-                            ],
-                          ),
+                        MindLogSettingTile(
+                          icon: Icons.dark_mode_outlined,
+                          title: "Modo Oscuro",
+                          trailing: MindLogSwitch(value: darkMode, onChanged: (val) => setState(() => darkMode = val)),
                         ),
-                        const Divider(color: Color(0xFFF8FAFC), height: 1, thickness: 1),
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32, height: 32,
-                                decoration: const BoxDecoration(color: Color(0xFFF8FAFC), shape: BoxShape.circle),
-                                child: const Icon(Icons.fingerprint, color: Color(0xFF64748B), size: 16),
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("Acceso con Huella /", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
-                                    Text("FaceID", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
-                                  ],
-                                ),
-                              ),
-                              MindLogSwitch(value: biometrics, onChanged: (val) => setState(() => biometrics = val)),
-                            ],
-                          ),
+                        MindLogSettingTile(
+                          showTopDivider: true,
+                          icon: Icons.fingerprint,
+                          title: "Acceso con Huella / FaceID",
+                          trailing: MindLogSwitch(value: biometrics, onChanged: (val) => setState(() => biometrics = val)),
                         ),
                       ],
                     ),

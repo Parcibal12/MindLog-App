@@ -77,7 +77,6 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-// Convertido a Stateful para manejar el TextEditingController y evitar el bug de onChanged
 class _FilledState extends ConsumerStatefulWidget {
   final List<JournalDto> entries;
 
@@ -95,7 +94,6 @@ class _FilledStateState extends ConsumerState<_FilledState> {
     super.initState();
     _searchController = TextEditingController();
     
-    // Escuchamos el controlador y actualizamos el Provider dinámicamente
     _searchController.addListener(() {
       ref.read(searchQueryProvider.notifier).state = _searchController.text;
     });
@@ -174,7 +172,7 @@ class _FilledStateState extends ConsumerState<_FilledState> {
           child: MindLogTextField(
             hintText: "Buscar en tu diario...",
             prefixIcon: Icons.search,
-            controller: _searchController, // <-- Usamos el controlador que tu app sí reconoce
+            controller: _searchController,
           ),
         ),
 
@@ -334,13 +332,13 @@ class _EntryCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8))),
+              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color:Color(0xFF94A3B8))),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             entry.content,
-            style: const TextStyle(fontSize: 14, color: const Color(0xFF475569), height: 1.5),
+            style: const TextStyle(fontSize: 14, color:Color(0xFF475569), height: 1.5),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
