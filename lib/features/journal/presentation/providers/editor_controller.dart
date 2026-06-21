@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/journal_repository.dart';
+import 'home_controller.dart';
 
 final editorControllerProvider = StateNotifierProvider<EditorController, AsyncValue<void>>((ref) {
   final repository = ref.read(journalRepositoryProvider);
-  return EditorController(repository);
+  return EditorController(repository, ref);
 });
 
 class EditorController extends StateNotifier<AsyncValue<void>> {
   final JournalRepository _repository;
-
-  EditorController(this._repository) : super(const AsyncData(null));
+  final Ref _ref;
+  EditorController(this._repository, this._ref) : super(const AsyncData(null));
 
   Future<bool> saveEntry({
     required String content,
@@ -31,6 +32,10 @@ class EditorController extends StateNotifier<AsyncValue<void>> {
         aiFeedback: aiFeedback,
         aiPattern: aiPattern,
       );
+      
+      _ref.invalidate(currentStreakProvider);
+      _ref.invalidate(journalEntriesProvider);
+
       state = const AsyncData(null); 
       return true; 
     } catch (e, st) {
