@@ -51,6 +51,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final editorState = ref.watch(editorControllerProvider);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
@@ -74,10 +76,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       ),
                     ],
                   ),
-                  MindLogButton(
-                    text: "Siguiente",
-                    onPressed: _onNextPressed,
-                  ),
+                  const SizedBox(width: 48), 
                 ],
               ),
             ),
@@ -107,6 +106,22 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: editorState.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: AppColors.primaryGreen), 
+                      )
+                    : MindLogButton(
+                        text: "Siguiente",
+                        onPressed: _onNextPressed,
+                      ),
               ),
             ),
           ],
