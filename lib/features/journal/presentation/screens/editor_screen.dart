@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mindlog_app/core/theme/app_colors.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
+import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
 import 'labeled_screen.dart';
@@ -33,6 +34,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       ref.read(journalContentDraftProvider.notifier).state = text;
       ref.read(aiFeedbackProvider.notifier).state = aiResult["feedback"]!;
       ref.read(aiPatternProvider.notifier).state = aiResult["pattern"]!;
+      ref.read(draftEmotionIdProvider.notifier).state = aiResult["emotionId"];
+      ref.read(draftIntensityProvider.notifier).state = aiResult["intensity"];
+      ref.read(draftContextTagsProvider.notifier).state = aiResult["contextTagIds"];
 
       Navigator.push(
         context,
@@ -47,6 +51,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final editorState = ref.watch(editorControllerProvider);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
@@ -61,22 +67,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     icon: const Icon(Icons.close, color: AppColors.textSubtitle),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Column(
+                  Column(
                     children: [
-                      Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1)),
-                      Text("10 de Diciembre", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textNumber)),
+                      const Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1)),
+                      Text(
+                        DateFormatter.formatFullDate(DateTime.now()), 
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textNumber)
+                      ),
                     ],
                   ),
-                  ElevatedButton(
-                    onPressed: _onNextPressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      elevation: 1,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                    ),
-                    child: const Text("Siguiente", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                  ),
+                  const SizedBox(width: 48), 
                 ],
               ),
             ),
@@ -106,6 +106,22 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: editorState.isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(color: AppColors.primaryGreen), 
+                      )
+                    : MindLogButton(
+                        text: "Siguiente",
+                        onPressed: _onNextPressed,
+                      ),
               ),
             ),
           ],
