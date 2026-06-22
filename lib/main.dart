@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'features/journal/presentation/screens/main_layout_screen.dart';
-void main() {
+import 'features/auth/presentation/screens/login_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();  
+  await Hive.initFlutter();  
+  await Hive.openBox('privacyVault');
+
   runApp(const ProviderScope(child: MindLogApp()));
 }
 
@@ -11,14 +18,14 @@ class MindLogApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MindLog',
+      title: 'MindLog v2.0',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF14B8A6)),
-        useMaterial3: true,
         fontFamily: 'Inter',
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        useMaterial3: true,
       ),
-      home: const MainLayoutScreen(),
+      home: const LoginScreen(), 
     );
   }
 }

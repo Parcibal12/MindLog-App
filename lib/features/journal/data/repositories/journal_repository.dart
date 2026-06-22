@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../datasources/remote/journal_api_client.dart';
@@ -5,8 +7,26 @@ import '../models/journal_dto.dart';
 import '../models/analytics_dto.dart';
 import '../models/metadata_dto.dart';
 
+class ApiConfig {
+  static const String _port = "5135"; 
+  
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:$_port/api/';
+    }
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:$_port/api/';
+    }
+    return 'http://localhost:$_port/api/';
+  }
+}
+
 final dioProvider = Provider<Dio>((ref) {
-  return Dio();
+  return Dio(BaseOptions(
+    baseUrl: ApiConfig.baseUrl,
+    connectTimeout: const Duration(seconds: 30),
+    receiveTimeout: const Duration(seconds: 30),
+  ));
 });
 
 final journalApiClientProvider = Provider<JournalApiClient>((ref) {
@@ -102,7 +122,6 @@ class JournalRepository {
   Future<int> getCurrentStreak(String userId) async {
     try {
       final response = await _apiClient.getCurrentStreak(userId);
-      
       return response.currentStreak; 
     } catch (e) {
       return 0; 

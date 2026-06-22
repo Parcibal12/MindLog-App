@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
+import '../../../journal/presentation/screens/main_layout_screen.dart';
+import '../providers/login_controller.dart';
 
 final pinProvider = StateProvider<String>((ref) => '');
 
@@ -10,17 +12,71 @@ class LoginScreen extends ConsumerWidget {
 
   void _addDigit(String digit, WidgetRef ref) {
     final current = ref.read(pinProvider);
-    if (current.length < 4) ref.read(pinProvider.notifier).state = current + digit;
+    if (current.length < 4) {
+      final newPin = current + digit;
+      ref.read(pinProvider.notifier).state = newPin;
+
+      if (newPin.length == 4) {
+        Future.delayed(const Duration(milliseconds: 200), () {
+          ref.read(loginControllerProvider.notifier).processPin(newPin);
+          ref.read(pinProvider.notifier).state = '';
+        });
+      }
+    }
   }
 
   void _removeDigit(WidgetRef ref) {
     final current = ref.read(pinProvider);
-    if (current.isNotEmpty) ref.read(pinProvider.notifier).state = current.substring(0, current.length - 1);
+    if (current.isNotEmpty) {
+      ref.read(pinProvider.notifier).state = current.substring(0, current.length - 1);
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pin = ref.watch(pinProvider);
+    final authState = ref.watch(loginControllerProvider);
+
+    ref.listen<AuthState>(loginControllerProvider, (previous, next) {
+      if (next == AuthState.authenticated) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainLayoutScreen()),
+        );
+      }
+    });
+
+    if (authState == AuthState.checking || authState == AuthState.authenticated) {
+      return const Scaffold(
+        backgroundColor: AppColors.backgroundWhite,
+        body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+      );
+    }
+
+    String title = "Bienvenido a MindLog";
+    String subtitle = "Ingresa tu PIN";
+    Color subtitleColor = AppColors.textSubtitle;
+
+    switch (authState) {
+      case AuthState.creatingPin:
+        title = "Bóveda de Privacidad";
+        subtitle = "Crea un PIN de 4 dígitos";
+        break;
+      case AuthState.confirmingPin:
+        title = "Bóveda de Privacidad";
+        subtitle = "Confirma tu nuevo PIN";
+        break;
+      case AuthState.enteringPin:
+        title = "Bienvenido de nuevo";
+        subtitle = "Ingresa tu PIN para continuar";
+        break;
+      case AuthState.error:
+        title = "Acceso Denegado";
+        subtitle = "PIN incorrecto. Intenta de nuevo.";
+        subtitleColor = Colors.redAccent;
+        break;
+      default:
+        break;
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundWhite,
@@ -60,15 +116,9 @@ class LoginScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              const Text(
-                                "Bienvenido de nuevo",
-                                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textHeader),
-                              ),
+                              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textHeader)),
                               const SizedBox(height: 8),
-                              const Text(
-                                "Ingresa tu PIN para continuar",
-                                style: TextStyle(fontSize: 14, color: AppColors.textSubtitle),
-                              ),
+                              Text(subtitle, style: TextStyle(fontSize: 14, color: subtitleColor, fontWeight: authState == AuthState.error ? FontWeight.bold : FontWeight.normal)),
                               const SizedBox(height: 40),
                               
                               Row(
@@ -89,21 +139,28 @@ class LoginScreen extends ConsumerWidget {
                               ),
                               
                               const SizedBox(height: 32),
-                              TextButton(
-                                onPressed: () {},
-                                child: const Text("¿Olvidaste tu PIN?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark, letterSpacing: 0.3)),
+                              if (authState == AuthState.enteringPin)
+                                TextButton(
+                                  onPressed: () {},
+                                  child: const Text("¿Olvidaste tu PIN?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark, letterSpacing: 0.3)),
+                                ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.fingerprint, color: AppColors.primaryGreen, size: 32),
+                                onPressed: () => ref.read(loginControllerProvider.notifier).triggerBiometrics(),
                               ),
-                              const SizedBox(height: 20),
                             ],
                           ),
                         ),
                       ),
+
                       MindLogNumPad(
                         onDigitTap: (digit) => _addDigit(digit, ref),
                         onBackspaceTap: () => _removeDigit(ref),
                         onBiometricTap: () {
+                          ref.read(loginControllerProvider.notifier).triggerBiometrics();
                         },
-                        showBiometrics: true,
+                        showBiometrics: authState == AuthState.enteringPin, 
                       ),
                     ],
                   ),

@@ -7,7 +7,7 @@ import '../../models/streak_dto.dart';
 
 part 'journal_api_client.g.dart';
 
-@RestApi(baseUrl: "http://localhost:5135/api/")
+@RestApi()
 abstract class JournalApiClient {
   factory JournalApiClient(Dio dio, {String baseUrl}) = _JournalApiClient;
 

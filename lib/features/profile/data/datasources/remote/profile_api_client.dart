@@ -4,7 +4,7 @@ import '../../models/update_profile_dto.dart';
 
 part 'profile_api_client.g.dart';
 
-@RestApi(baseUrl: "http://localhost:5135/api/")
+@RestApi()
 abstract class ProfileApiClient {
   factory ProfileApiClient(Dio dio, {String baseUrl}) = _ProfileApiClient;
 

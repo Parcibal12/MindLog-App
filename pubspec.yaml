@@ -23,6 +23,7 @@ dependencies:
       url: https://github.com/Parcibal12/mindlog_design_system.git
       ref: main
   http: ^1.6.0
+  local_auth: ^3.0.1
 
 dev_dependencies:
   flutter_test:
