@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mindlog_design_system/mindlog_design_system.dart';
 import '../providers/home_controller.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -13,26 +14,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime _focusedMonth = DateTime.now();
   DateTime _selectedDate = DateTime.now();
 
-  Color _getEmotionColor(String emotionName) {
-    switch (emotionName.toLowerCase()) {
-      case 'ansiedad': return const Color(0xFFF97316);
-      case 'calma': return const Color(0xFF14B8A6);
-      case 'enojo': return const Color(0xFFA855F7);
-      case 'tristeza': return const Color(0xFF3B82F6);
-      default: return const Color(0xFF94A3B8);
-    }
-  }
-
-  IconData _getEmotionIcon(String emotionName) {
-    switch (emotionName.toLowerCase()) {
-      case 'ansiedad': return Icons.sentiment_dissatisfied;
-      case 'calma': return Icons.sentiment_satisfied_alt;
-      case 'enojo': return Icons.sentiment_very_dissatisfied;
-      case 'tristeza': return Icons.sentiment_neutral;
-      default: return Icons.circle;
-    }
-  }
-
   String _formatTime(DateTime dateTime) {
     final local = dateTime.toLocal();
     final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
@@ -45,8 +26,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final entriesAsync = ref.watch(journalEntriesProvider);
     final allEntries = entriesAsync.value ?? [];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Calcular la grilla del calendario (Días del mes actual)
     final daysInMonth = DateUtils.getDaysInMonth(_focusedMonth.year, _focusedMonth.month);
     final firstDayOfMonth = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
     final firstWeekday = firstDayOfMonth.weekday; 
@@ -59,21 +40,19 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Column(
           children: [
-            // --- TOP BAR ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: Color(0xFF94A3B8), size: 28),
+                    icon: Icon(Icons.chevron_left, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, size: 28),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
-                  const Text("Calendario Emocional", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  Text("Calendario Emocional", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                 ],
               ),
             ),
@@ -84,19 +63,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: Color(0xFF94A3B8)),
+                    icon: Icon(Icons.chevron_left, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                     onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1, 1)),
                   ),
-                  Text("${_focusedMonth.month}/${_focusedMonth.year}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                  Text("${_focusedMonth.month}/${_focusedMonth.year}", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber)),
                   IconButton(
-                    icon: const Icon(Icons.chevron_right, color: Color(0xFF94A3B8)),
+                    icon: Icon(Icons.chevron_right, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                     onPressed: () => setState(() => _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 1)),
                   ),
                 ],
               ),
             ),
 
-            // --- CONTENIDO DEL CALENDARIO DINÁMICO ---
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: 24),
@@ -107,16 +85,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white, borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
-                        boxShadow: const [BoxShadow(color: Color(0x08000000), offset: Offset(0, 4), blurRadius: 10)],
+                        color: isDark ? AppColors.darkSurface : AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight),
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), offset: const Offset(0, 4), blurRadius: 10)],
                       ),
                       child: Column(
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: ["Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"].map((d) => 
-                              Text(d, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.25))
+                              Text(d, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.25))
                             ).toList(),
                           ),
                           const SizedBox(height: 12),
@@ -127,28 +106,27 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             itemCount: totalSlots,
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 7, mainAxisSpacing: 12, crossAxisSpacing: 8),
                             itemBuilder: (context, index) {
-                              if (index < emptySlots) return const SizedBox.shrink(); // Espacios vacíos antes del día 1
+                              if (index < emptySlots) return const SizedBox.shrink(); 
                               
                               int day = index - emptySlots + 1;
                               DateTime thisDate = DateTime(_focusedMonth.year, _focusedMonth.month, day);
                               bool isSelected = _selectedDate.year == thisDate.year && _selectedDate.month == thisDate.month && _selectedDate.day == thisDate.day;
                               
-                              // Buscar si hay diarios ese día específico
                               var dayEntries = allEntries.where((e) => e.createdAt.toLocal().year == thisDate.year && e.createdAt.toLocal().month == thisDate.month && e.createdAt.toLocal().day == thisDate.day).toList();
                               
-                              Color bgColor = const Color(0xFFF1F5F9);
-                              Color textColor = const Color(0xFF475569);
+                              Color bgColor = isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight;
+                              Color textColor = isDark ? AppColors.darkTextSubtitle : AppColors.textNumber;
                               List<BoxShadow>? shadow;
 
                               if (isSelected) {
-                                bgColor = const Color(0xFF1E293B);
+                                bgColor = isDark ? AppColors.primaryDark : AppColors.textHeader;
                                 textColor = Colors.white;
                               } else if (dayEntries.isNotEmpty) {
-                                bgColor = _getEmotionColor(dayEntries.first.emotionName);
+                                bgColor = EmotionThemeMapper.getPalette(dayEntries.first.emotionName).main;
                                 textColor = Colors.white;
                                 shadow = [BoxShadow(color: bgColor.withValues(alpha: 0.3), offset: const Offset(0, 4), blurRadius: 6)];
                               } else if (thisDate.isBefore(DateTime.now())) {
-                                textColor = const Color(0xFFCBD5E1); // Días pasados sin registro
+                                textColor = isDark ? AppColors.darkBackground : const Color(0xFFCBD5E1); 
                               }
 
                               return GestureDetector(
@@ -165,48 +143,47 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           Wrap(
                             spacing: 12, runSpacing: 8, alignment: WrapAlignment.center,
                             children: [
-                              _buildLegendItem(const Color(0xFF14B8A6), "Calma"),
-                              _buildLegendItem(const Color(0xFFF97316), "Ansiedad"),
-                              _buildLegendItem(const Color(0xFFA855F7), "Enojo"),
-                              _buildLegendItem(const Color(0xFF3B82F6), "Tristeza"),
+                              _buildLegendItem(AppColors.primaryGreen, "Calma", isDark),
+                              _buildLegendItem(AppColors.anxietyOrange, "Ansiedad", isDark),
+                              _buildLegendItem(AppColors.angerPurple, "Enojo", isDark),
+                              _buildLegendItem(AppColors.sadnessBlue, "Tristeza", isDark),
                             ],
                           )
                         ],
                       ),
                     ),
 
-                    // --- ENTRADAS DEL DÍA SELECCIONADO (DINÁMICAS) ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-                      child: Text("Registros del ${_selectedDate.day}/${_selectedDate.month}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF334155))),
+                      child: Text("Registros del ${_selectedDate.day}/${_selectedDate.month}", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber)),
                     ),
                     
                     if (selectedDayEntries.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                        child: Text("No hay registros este día.", style: TextStyle(color: Color(0xFF94A3B8))),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+                        child: Text("No hay registros este día.", style: TextStyle(color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                       )
                     else
                       ...selectedDayEntries.map((entry) {
-                        final color = _getEmotionColor(entry.emotionName);
-                        // Extraemos un solo contexto para mostrar (para evitar overflow)
+                        final palette = EmotionThemeMapper.getPalette(entry.emotionName);
                         final contextText = entry.contextTagIds.isNotEmpty ? "Contexto Guardado" : "Diario General"; 
 
                         return Container(
                           margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white, borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: const Color(0xFFF1F5F9)),
-                            boxShadow: const [BoxShadow(color: Color(0x08000000), offset: Offset(0, 4), blurRadius: 10)],
+                            color: isDark ? AppColors.darkSurface : AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight),
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 4), blurRadius: 10)],
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
                                 width: 40, height: 40,
-                                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
-                                child: Icon(_getEmotionIcon(entry.emotionName), color: color, size: 20),
+                                decoration: BoxDecoration(color: palette.lightBackground, shape: BoxShape.circle),
+                                child: Icon(palette.icon, color: palette.main, size: 20),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -219,23 +196,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                                          child: Text(entry.emotionName.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: color, letterSpacing: 0.25)),
+                                          decoration: BoxDecoration(color: palette.lightBackground, borderRadius: BorderRadius.circular(6)),
+                                          child: Text(entry.emotionName.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: palette.main, letterSpacing: 0.25)),
                                         ),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                          decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
-                                          child: Text(contextText, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF64748B), letterSpacing: 0.25)),
+                                          decoration: BoxDecoration(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight, borderRadius: BorderRadius.circular(6)),
+                                          child: Text(contextText, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.25)),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
                                       entry.content,
-                                      style: const TextStyle(fontSize: 14, color: Color(0xFF475569), height: 1.5),
+                                      style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber, height: 1.5),
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
+                                    Text(_formatTime(entry.createdAt), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                                   ],
                                 ),
                               ),
@@ -253,13 +230,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
+  Widget _buildLegendItem(Color color, String label, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF64748B))),
+        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
       ],
     );
   }

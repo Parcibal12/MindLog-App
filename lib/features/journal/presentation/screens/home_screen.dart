@@ -15,9 +15,10 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isOffline = ref.watch(isOfflineModeProvider);
     final entriesAsyncValue = ref.watch(journalEntriesProvider);
+    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
       body: SafeArea(
         child: Column(
           children: [
@@ -25,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
               duration: const Duration(milliseconds: 300),
               height: isOffline ? 40 : 0,
               width: double.infinity,
-              color: const Color(0xFFFFA000),
+              color: AppColors.warningMode,
               child: isOffline
                   ? const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -50,32 +51,29 @@ class HomeScreen extends ConsumerWidget {
                     children: [
                       Text(
                         DateFormatter.formatShortDate(DateTime.now()),
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 0.55),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.55),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         "Hola, Daniel",
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textHeader),
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader),
                       ),
                     ],
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
                     },
                     child: Container(
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDFA),
+                        color: isDark ? AppColors.darkAvatarBackground : AppColors.avatarBackground,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFCCFBF1)),
+                        border: Border.all(color: isDark ? AppColors.primaryDark : AppColors.avatarBorder),
                       ),
                       alignment: Alignment.center,
-                      child: const Text("D", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primaryDark)),
+                      child: Text("D", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark)),
                     ),
                   ),
                 ],
@@ -101,7 +99,6 @@ class HomeScreen extends ConsumerWidget {
 
 class _FilledState extends ConsumerStatefulWidget {
   final List<JournalDto> entries;
-
   const _FilledState({required this.entries});
 
   @override
@@ -115,7 +112,6 @@ class _FilledStateState extends ConsumerState<_FilledState> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    
     _searchController.addListener(() {
       ref.read(searchQueryProvider.notifier).state = _searchController.text;
     });
@@ -162,10 +158,7 @@ class _FilledStateState extends ConsumerState<_FilledState> {
       } else {
         key = DateFormatter.formatShortDate(localDate);
       }
-
-      if (!groups.containsKey(key)) {
-        groups[key] = [];
-      }
+      if (!groups.containsKey(key)) groups[key] = [];
       groups[key]!.add(entry);
     }
     return groups;
@@ -174,11 +167,11 @@ class _FilledStateState extends ConsumerState<_FilledState> {
   @override
   Widget build(BuildContext context) {
     final searchQuery = ref.watch(searchQueryProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     final filteredEntries = widget.entries.where((entry) {
       final query = searchQuery.toLowerCase();
-      return entry.content.toLowerCase().contains(query) || 
-             entry.emotionName.toLowerCase().contains(query);
+      return entry.content.toLowerCase().contains(query) || entry.emotionName.toLowerCase().contains(query);
     }).toList();
 
     final groupedEntries = _groupEntriesByDate(filteredEntries);
@@ -190,18 +183,16 @@ class _FilledStateState extends ConsumerState<_FilledState> {
       color: AppColors.primaryGreen,
       onRefresh: () async {
         await Future.delayed(const Duration(seconds: 1));
-        
         await ref.read(syncServiceProvider).runSilentSync();
         ref.invalidate(journalEntriesProvider);
         ref.invalidate(currentStreakProvider);
-        
         try { 
           await ref.read(journalEntriesProvider.future); 
           if (ref.read(isOfflineModeProvider) && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
-                backgroundColor: Color(0xFFFFA000),
+                backgroundColor: AppColors.warningMode,
                 duration: Duration(seconds: 2),
               ),
             );
@@ -269,11 +260,11 @@ class _FilledStateState extends ConsumerState<_FilledState> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFF7ED),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.darkStreakBackground : AppColors.streakBackground,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF97316), size: 24),
+                    child: const Icon(Icons.local_fire_department_rounded, color: AppColors.streakIcon, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -282,12 +273,12 @@ class _FilledStateState extends ConsumerState<_FilledState> {
                       children: [
                         Text(
                           streak > 0 ? "¡Racha de $streak días!" : "Inicia tu racha hoy",
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textHeader),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           streak > 0 ? "Sigue escribiendo para no perderla." : "Registra cómo te sientes.",
-                          style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle),
+                          style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                         ),
                       ],
                     ),
@@ -311,7 +302,7 @@ class _FilledStateState extends ConsumerState<_FilledState> {
                 child: Text(
                   'No se encontraron resultados para "$searchQuery"',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSubtitle),
+                  style: TextStyle(color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                 ),
               ),
             ),
@@ -324,7 +315,7 @@ class _FilledStateState extends ConsumerState<_FilledState> {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   child: Text(
                     dateSection, 
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 0.55)
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.55)
                   ),
                 ),
                 ...groupedEntries[dateSection]!.map((entry) => _EntryCard(entry: entry)),
@@ -339,7 +330,6 @@ class _FilledStateState extends ConsumerState<_FilledState> {
 
 class _EntryCard extends StatelessWidget {
   final JournalDto entry;
-
   const _EntryCard({required this.entry});
 
   String _formatTime(DateTime dateTime) {
@@ -353,6 +343,7 @@ class _EntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = EmotionThemeMapper.getPalette(entry.emotionName);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return MindLogCard(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
@@ -378,13 +369,13 @@ class _EntryCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(_formatTime(entry.createdAt), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color:Color(0xFF94A3B8))),
+              Text(_formatTime(entry.createdAt), style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             entry.content,
-            style: const TextStyle(fontSize: 14, color:Color(0xFF475569), height: 1.5),
+            style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader, height: 1.5),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -399,6 +390,8 @@ class _EmptyState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return RefreshIndicator(
       color: AppColors.primaryGreen,
       onRefresh: () async {
@@ -410,10 +403,10 @@ class _EmptyState extends ConsumerWidget {
           await ref.read(journalEntriesProvider.future); 
           if (ref.read(isOfflineModeProvider) && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
-                backgroundColor: Colors.amber,
-                duration: Duration(seconds: 2),
+              SnackBar(
+                content: const Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
+                backgroundColor: AppColors.warningMode,
+                duration: const Duration(seconds: 2),
               ),
             );
           }
@@ -431,28 +424,20 @@ class _EmptyState extends ConsumerWidget {
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFCCFBF1),
+                  color: isDark ? AppColors.darkSurface : AppColors.avatarBorder,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
+                  border: Border.all(color: isDark ? AppColors.primaryDark : Colors.white, width: 4),
                   boxShadow: const [BoxShadow(color: Color(0x3314B8A6), blurRadius: 20)],
                 ),
                 child: const Icon(Icons.eco_outlined, color: AppColors.primaryGreen, size: 40),
               ),
               const SizedBox(height: 24),
-              const Text("Tu lienzo en blanco", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textHeader)),
+              Text("Tu lienzo en blanco", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
               const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 32.0),
-                child: Text("Aún no hay registros hoy. Tómate un momento para escribir cómo te sientes. Tu mente te lo agradecerá.", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                child: Text("Aún no hay registros hoy. Tómate un momento para escribir cómo te sientes. Tu mente te lo agradecerá.", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, height: 1.5)),
               ),
-              const SizedBox(height: 40),
-              const Column(
-                children: [
-                  Text("COMENZAR", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF5EEAD4), letterSpacing: 1)),
-                  SizedBox(height: 4),
-                  Icon(Icons.keyboard_arrow_down, color: Color(0xFF5EEAD4)),
-                ],
-              )
             ],
           ),
         ),

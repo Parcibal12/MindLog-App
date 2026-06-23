@@ -23,7 +23,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (autoSend) {
       if (email.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Debes ingresar el correo del terapeuta"), backgroundColor: Colors.orange),
+          const SnackBar(content: Text("Debes ingresar el correo del terapeuta"), backgroundColor: AppColors.warningMode),
         );
         return;
       }
@@ -31,7 +31,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final bool isEmailValid = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
       if (!isEmailValid) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Ingresa un correo electrónico válido"), backgroundColor: Colors.orange),
+          const SnackBar(content: Text("Ingresa un correo electrónico válido"), backgroundColor: AppColors.warningMode),
         );
         return;
       }
@@ -44,7 +44,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (success) {
         setState(() => reportSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Perfil actualizado y reporte enviado"), backgroundColor: Color(0xFF14B8A6)),
+          const SnackBar(content: Text("Perfil actualizado y reporte enviado"), backgroundColor: AppColors.primaryGreen),
         );
         
         Future.delayed(const Duration(seconds: 3), () {
@@ -52,7 +52,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error al procesar la solicitud"), backgroundColor: Colors.redAccent),
+          const SnackBar(content: Text("Error al procesar la solicitud"), backgroundColor: AppColors.errorRed),
         );
       }
     }
@@ -62,25 +62,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final profileState = ref.watch(profileControllerProvider);
     final isLoading = profileState is AsyncLoading;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
       body: Stack(
         children: [
           Positioned(
             top: 0, left: 0, right: 0,
             height: 104,
             child: Container(
-              color: const Color(0xFFF8FAFC),
+              color: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
               padding: const EdgeInsets.only(top: 50, left: 16, right: 16),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, color: Color(0xFF94A3B8), size: 28),
+                    icon: Icon(Icons.chevron_left, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 8),
-                  const Text("Mi Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  Text("Mi Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                 ],
               ),
             ),
@@ -100,38 +100,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Container(
                           width: 64, height: 64,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFCCFBF1),
+                            color: isDark ? AppColors.darkAvatarBackground : AppColors.avatarBorder,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 4),
-                            boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
+                            border: Border.all(color: isDark ? AppColors.primaryDark : Colors.white, width: 4),
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, 1), blurRadius: 1)],
                           ),
                           alignment: Alignment.center,
-                          child: const Text("D", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0D9488))),
+                          child: Text("D", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark)),
                         ),
                         const SizedBox(width: 16),
-                        const Column(
+                        Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Daniel Irigoyen", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-                            Text("Estudiante de Ingeniería", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF64748B))),
+                            Text("Daniel Irigoyen", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
+                            Text("Estudiante de Ingeniería", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                           ],
                         ),
                       ],
                     ),
                   ),
 
-                  const Padding(
-                    padding: EdgeInsets.only(left: 28, top: 16, bottom: 8),
-                    child: Text("CONEXIÓN PROFESIONAL", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.55)),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28, top: 16, bottom: 8),
+                    child: Text("CONEXIÓN PROFESIONAL", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.55)),
                   ),
 
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? AppColors.darkSurface : AppColors.surfaceLight,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFCCFBF1)),
-                      boxShadow: const [BoxShadow(color: Color(0x07000000), offset: Offset(0, 4), blurRadius: 20)],
+                      border: Border.all(color: isDark ? AppColors.primaryDark.withValues(alpha: 0.3) : AppColors.avatarBorder),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), offset: const Offset(0, 4), blurRadius: 20)],
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
@@ -140,9 +140,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           top: 2, right: 2,
                           child: Container(
                             width: 96, height: 96,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF0FDFA),
-                              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(96)),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkAvatarBackground : AppColors.avatarBackground,
+                              borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(96)),
                             ),
                           ),
                         ),
@@ -154,12 +154,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 children: [
                                   Container(
                                     width: 40, height: 40,
-                                    decoration: const BoxDecoration(color: Color(0xFFF0FDFA), shape: BoxShape.circle),
-                                    child: const Icon(Icons.link, color: Color(0xFF0D9488), size: 20),
+                                    decoration: BoxDecoration(color: isDark ? AppColors.darkAvatarBackground : AppColors.avatarBackground, shape: BoxShape.circle),
+                                    child: Icon(Icons.link, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark, size: 20),
                                   ),
                                   const SizedBox(width: 12),
-                                  const Expanded(
-                                    child: Text("Terapeuta vinculado", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                                  Expanded(
+                                    child: Text("Terapeuta vinculado", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                                   ),
                                 ],
                               ),
@@ -172,22 +172,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 prefixIcon: Icons.email_outlined,
                               ),
                             ),
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20),
-                              child: Divider(color: Color(0xFFF1F5F9), height: 32, thickness: 1),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Divider(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight, height: 32, thickness: 1),
                             ),
                             Padding(
                               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Expanded(
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text("Envío automático", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-                                        SizedBox(height: 2),
-                                        Text("Comparte un resumen de tus patrones cada domingo por la noche.", style: TextStyle(fontSize: 10, color: Color(0xFF64748B), height: 1.25)),
+                                        Text("Envío automático", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
+                                        const SizedBox(height: 2),
+                                        Text("Comparte un resumen de tus patrones cada domingo por la noche.", style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, height: 1.25)),
                                       ],
                                     ),
                                   ),
@@ -207,8 +207,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 child: Container(
                                   height: 42,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF0FDFA),
-                                    border: Border.all(color: const Color(0xFF99F6E4)),
+                                    color: isDark ? AppColors.darkAvatarBackground : AppColors.avatarBackground,
+                                    border: Border.all(color: isDark ? AppColors.primaryDark : AppColors.secondaryGreen),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   alignment: Alignment.center,
@@ -216,15 +216,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       if (isLoading)
-                                        const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Color(0xFF0D9488), strokeWidth: 2))
+                                        SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark, strokeWidth: 2))
                                       else ...[
                                         Text(
                                           reportSent ? "✓ Reporte enviado" : "Guardar y generar ahora",
-                                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0D9488)),
+                                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark),
                                         ),
                                         if (!reportSent) ...[
                                           const SizedBox(width: 8),
-                                          const Icon(Icons.chevron_right, color: Color(0xFF0D9488), size: 18),
+                                          Icon(Icons.chevron_right, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark, size: 18),
                                         ]
                                       ]
                                     ],
@@ -238,18 +238,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
 
-                  const Padding(
-                    padding: EdgeInsets.only(left: 28, top: 24, bottom: 8),
-                    child: Text("APLICACIÓN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF94A3B8), letterSpacing: 0.55)),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 28, top: 24, bottom: 8),
+                    child: Text("APLICACIÓN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 0.55)),
                   ),
 
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 24),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDark ? AppColors.darkSurface : AppColors.surfaceLight,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFF1F5F9)),
-                      boxShadow: const [BoxShadow(color: Color(0x07000000), offset: Offset(0, 4), blurRadius: 10)],
+                      border: Border.all(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight),
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 4), blurRadius: 10)],
                     ),
                     child: Column(
                       children: [
@@ -276,25 +276,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: Container(
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: const Color(0xFFFEE2E2)),
+                          color: isDark ? AppColors.darkSurface : AppColors.surfaceLight,
+                          border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(16),
-                          boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 1), blurRadius: 1)],
                         ),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.logout, color: Color(0xFFEF4444), size: 18),
+                            Icon(Icons.logout, color: AppColors.errorRed, size: 18),
                             SizedBox(width: 8),
-                            Text("Cerrar Sesión", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFFEF4444))),
+                            Text("Cerrar Sesión", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.errorRed)),
                           ],
                         ),
                       ),
                     ),
                   ),
 
-                  const Center(
-                    child: Text("MindLog v2.0 - Multiplataforma", style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                  Center(
+                    child: Text("MindLog v2.0 - Multiplataforma", style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                   ),
                 ],
               ),
