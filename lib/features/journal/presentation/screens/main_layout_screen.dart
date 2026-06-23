@@ -38,8 +38,10 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -56,7 +58,7 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
+        color: isDark ? AppColors.darkSurface : Colors.white,
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
         height: 70,
@@ -71,14 +73,14 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                 children: [
                   Icon(
                     Icons.home_filled,
-                    color: _currentIndex == 0 ? AppColors.primaryDark : AppColors.textSubtitle,
+                    color: _currentIndex == 0 ? (isDark ? AppColors.secondaryGreen : AppColors.primaryDark) : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                   ),
                   Text(
                     "Inicio", 
                     style: TextStyle(
                       fontSize: 10, 
                       fontWeight: _currentIndex == 0 ? FontWeight.bold : FontWeight.w500, 
-                      color: _currentIndex == 0 ? AppColors.primaryDark : AppColors.textSubtitle
+                      color: _currentIndex == 0 ? (isDark ? AppColors.secondaryGreen : AppColors.primaryDark) : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)
                     )
                   ),
                 ],
@@ -95,14 +97,14 @@ class _MainLayoutScreenState extends ConsumerState<MainLayoutScreen> {
                 children: [
                   Icon(
                     Icons.bar_chart, 
-                    color: _currentIndex == 1 ? AppColors.primaryDark : AppColors.textSubtitle,
+                    color: _currentIndex == 1 ? (isDark ? AppColors.secondaryGreen : AppColors.primaryDark) : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                   ),
                   Text(
                     "Reportes", 
                     style: TextStyle(
                       fontSize: 10, 
                       fontWeight: _currentIndex == 1 ? FontWeight.bold : FontWeight.w500, 
-                      color: _currentIndex == 1 ? AppColors.primaryDark : AppColors.textSubtitle
+                      color: _currentIndex == 1 ? (isDark ? AppColors.secondaryGreen : AppColors.primaryDark) : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)
                     )
                   ),
                 ],

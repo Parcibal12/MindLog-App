@@ -403,10 +403,10 @@ class _EmptyState extends ConsumerWidget {
           await ref.read(journalEntriesProvider.future); 
           if (ref.read(isOfflineModeProvider) && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
+              const SnackBar(
+                content: Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
                 backgroundColor: AppColors.warningMode,
-                duration: const Duration(seconds: 2),
+                duration: Duration(seconds: 2),
               ),
             );
           }

@@ -63,7 +63,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
         Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Error al guardar en el servidor"), backgroundColor: Colors.redAccent),
+          const SnackBar(content: Text("Error al guardar en el servidor"), backgroundColor: AppColors.errorRed),
         );
       }
     }
@@ -74,15 +74,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
     final journalContent = ref.watch(journalContentDraftProvider);
     final isLoading = ref.watch(editorControllerProvider).isLoading;
     final aiFeedback = ref.watch(aiFeedbackProvider);
-    
     final emotionsAsync = ref.watch(emotionsProvider);
     final tagsAsync = ref.watch(contextTagsProvider);
-    
     final selectedPalette = EmotionThemeMapper.getPalette(_selectedEmotionData?.name ?? 'Calma');
     final bool canSave = _selectedEmotionId != null && !isLoading;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
       body: Stack(
         children: [
           Positioned.fill(
@@ -93,14 +92,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 24, top: 16),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 24, top: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("¿Cómo te sentiste?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
-                        SizedBox(height: 4),
-                        Text("Selecciona la emoción predominante", style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8))),
+                        Text("¿Cómo te sentiste?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
+                        const SizedBox(height: 4),
+                        Text("Selecciona la emoción predominante", style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                       ],
                     ),
                   ),
@@ -109,7 +108,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: emotionsAsync.when(
                       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
-                      error: (err, st) => Text("Error: $err", style: const TextStyle(color: Colors.red)),
+                      error: (err, st) => Text("Error: $err", style: const TextStyle(color: AppColors.errorRed)),
                       data: (emotions) {
                         if (_selectedEmotionId != null && _selectedEmotionData == null) {
                           Future.microtask(() {
@@ -133,13 +132,12 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                                   margin: const EdgeInsets.symmetric(horizontal: 4),
                                   height: 85,
                                   decoration: BoxDecoration(
-                                    color: isSelected ? palette.lightBackground : Colors.white,
+                                    color: isSelected ? (isDark ? palette.main.withValues(alpha: 0.2) : palette.lightBackground) : (isDark ? AppColors.darkSurface : Colors.white),
                                     borderRadius: BorderRadius.circular(16),
                                     border: Border.all(
-                                      color: isSelected ? palette.main : const Color(0xFFE2E8F0),
+                                      color: isSelected ? palette.main : (isDark ? AppColors.darkIndicatorInactive : AppColors.indicatorInactive),
                                       width: isSelected ? 1.5 : 1,
                                     ),
-                                    boxShadow: const [BoxShadow(color: Color(0x0C000000), offset: Offset(0, 1), blurRadius: 1)],
                                   ),
                                   child: Stack(
                                     clipBehavior: Clip.none,
@@ -148,14 +146,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                                       Column(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Icon(palette.icon, size: 32, color: isSelected ? palette.main : const Color(0xFF94A3B8)),
+                                          Icon(palette.icon, size: 32, color: isSelected ? palette.main : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                                           const SizedBox(height: 8),
                                           Text(
                                             em.name.toUpperCase(),
                                             style: TextStyle(
                                               fontSize: 9,
                                               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                                              color: isSelected ? palette.main : const Color(0xFF94A3B8),
+                                              color: isSelected ? palette.main : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                                               letterSpacing: 0.2,
                                             ),
                                           ),
@@ -191,25 +189,25 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                            const Text("Intensidad", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                            Text("Intensidad", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                             const Spacer(),
                             Text(_intensity.toInt().toString(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: selectedPalette.main)),
-                            const Text("/10", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
+                            Text("/10", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                           ],
                         ),
                         const SizedBox(height: 16),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("Leve", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
-                            Text("Moderada", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
-                            Text("Severa", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFF94A3B8))),
+                            Text("Leve", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
+                            Text("Moderada", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
+                            Text("Severa", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                           ],
                         ),
                         SliderTheme(
                           data: SliderThemeData(
                             activeTrackColor: selectedPalette.main,
-                            inactiveTrackColor: const Color(0xFFE2E8F0),
+                            inactiveTrackColor: isDark ? AppColors.darkIndicatorInactive : AppColors.indicatorInactive,
                             thumbColor: Colors.white,
                             trackHeight: 8,
                             overlayShape: SliderComponentShape.noOverlay,
@@ -231,14 +229,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("¿En qué contexto?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                        Text("¿En qué contexto?", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                         const SizedBox(height: 4),
-                        const Text("Puedes seleccionar más de uno", style: TextStyle(fontSize: 14, color: Color(0xFF94A3B8))),
+                        Text("Puedes seleccionar más de uno", style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                         const SizedBox(height: 12),
                         
                         tagsAsync.when(
                           loading: () => const CircularProgressIndicator(color: AppColors.primaryGreen),
-                          error: (err, st) => const Text("Error", style: TextStyle(color: Colors.red)),
+                          error: (err, st) => const Text("Error", style: TextStyle(color: AppColors.errorRed)),
                           data: (tags) {
                             return Wrap(
                               spacing: 8,
@@ -250,16 +248,16 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? AppColors.primaryGreen : Colors.white,
+                                      color: isSelected ? AppColors.primaryGreen : (isDark ? AppColors.darkSurface : Colors.white),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: isSelected ? AppColors.primaryGreen : const Color(0xFFE2E8F0)),
+                                      border: Border.all(color: isSelected ? AppColors.primaryGreen : (isDark ? AppColors.darkIndicatorInactive : AppColors.indicatorInactive)),
                                     ),
                                     child: Text(
                                       tag.name,
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                                        color: isSelected ? Colors.white : const Color(0xFF64748B),
+                                        color: isSelected ? Colors.white : (isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                                       ),
                                     ),
                                   ),
@@ -276,10 +274,9 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                     margin: const EdgeInsets.all(24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: selectedPalette.lightBackground, 
+                      color: isDark ? AppColors.darkSurface : selectedPalette.lightBackground, 
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: selectedPalette.main.withValues(alpha: 0.2)),
-                      boxShadow: const [BoxShadow(color: Color(0x0C000000), blurRadius: 2, offset: Offset(0, 1))],
+                      border: Border.all(color: selectedPalette.main.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,7 +291,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                               const SizedBox(height: 8),
                               RichText(
                                 text: TextSpan(
-                                  style: const TextStyle(fontSize: 14, color: Color(0xFF334155), height: 1.6, fontWeight: FontWeight.w500),
+                                  style: TextStyle(fontSize: 14, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber, height: 1.6, fontWeight: FontWeight.w500),
                                   children: [
                                     TextSpan(text: '"$aiFeedback"'),
                                   ],
@@ -315,16 +312,16 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
             top: 0, left: 0, right: 0,
             child: Container(
               height: 96,
-              color: const Color(0xFFF8FAFC),
+              color: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
               padding: const EdgeInsets.only(top: 40, left: 16, right: 16),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.chevron_left, size: 28, color: Color(0xFF94A3B8)),
+                    icon: Icon(Icons.chevron_left, size: 28, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
-                  const Text("Detalles de entrada", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+                  Text("Detalles de entrada", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                 ],
               ),
             ),
@@ -335,15 +332,14 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
             child: Container(
               height: 96,
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
-                boxShadow: [BoxShadow(color: Color(0x07000000), offset: Offset(0, -10), blurRadius: 10)],
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                border: Border(top: BorderSide(color: isDark ? AppColors.darkIndicatorInactive : AppColors.borderLight)),
               ),
               child: MindLogButton(
                 text: isLoading ? "Guardando..." : "Guardar Entrada",
                 isFullWidth: true,
-                backgroundColor: canSave ? AppColors.primaryGreen : Colors.grey.shade400,
+                backgroundColor: canSave ? AppColors.primaryGreen : (isDark ? AppColors.darkIndicatorInactive : Colors.grey.shade400),
                 onPressed: canSave ? () => _handleSave(journalContent) : null,
               ),
             ),

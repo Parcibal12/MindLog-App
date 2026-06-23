@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
+import '../../../../core/theme/theme_provider.dart';
 import '../providers/profile_controller.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -12,7 +13,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool autoSend = true;
-  bool darkMode = false;
   bool biometrics = true;
   bool reportSent = false;
   final TextEditingController _emailController = TextEditingController();
@@ -63,6 +63,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final profileState = ref.watch(profileControllerProvider);
     final isLoading = profileState is AsyncLoading;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final currentThemeMode = ref.watch(themeProvider);
+    final isDarkModeActive = currentThemeMode == ThemeMode.dark;
 
     return Scaffold(
       body: Stack(
@@ -256,7 +259,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         MindLogSettingTile(
                           icon: Icons.dark_mode_outlined,
                           title: "Modo Oscuro",
-                          trailing: MindLogSwitch(value: darkMode, onChanged: (val) => setState(() => darkMode = val)),
+                          trailing: MindLogSwitch(
+                            value: isDarkModeActive, 
+                            onChanged: (_) {
+                              ref.read(themeProvider.notifier).toggleTheme();
+                            }
+                          ),
                         ),
                         MindLogSettingTile(
                           showTopDivider: true,

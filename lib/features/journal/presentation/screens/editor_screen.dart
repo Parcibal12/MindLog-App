@@ -44,7 +44,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       );
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Error al analizar el texto"), backgroundColor: Colors.redAccent),
+        const SnackBar(content: Text("Error al analizar el texto"), backgroundColor: AppColors.errorRed),
       );
     }
   }
@@ -52,9 +52,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   @override
   Widget build(BuildContext context) {
     final editorState = ref.watch(editorControllerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,15 +65,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSubtitle),
+                    icon: Icon(Icons.close, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   Column(
                     children: [
-                      const Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 1)),
+                      Text("HOY", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, letterSpacing: 1)),
                       Text(
                         DateFormatter.formatFullDate(DateTime.now()), 
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textNumber)
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber)
                       ),
                     ],
                   ),
@@ -88,7 +89,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 22),
-                    const Text("¿Qué hay en tu mente\nhoy?", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.textHeader, height: 1.25)),
+                    Text("¿Qué hay en tu mente\nhoy?", style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader, height: 1.25)),
                     const SizedBox(height: 20),
                     Expanded(
                       child: TextField(
@@ -96,10 +97,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                         autofocus: true,
                         maxLines: null,
                         keyboardType: TextInputType.multiline,
-                        style: const TextStyle(fontSize: 18, color: Color(0xFF475569), height: 1.6),
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: 18, color: isDark ? AppColors.darkTextHeader : AppColors.textNumber, height: 1.6),
+                        decoration: InputDecoration(
                           hintText: "Escribe libremente lo que sientes...",
-                          hintStyle: TextStyle(color: AppColors.textSubtitle),
+                          hintStyle: TextStyle(color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
                           border: InputBorder.none,
                         ),
                       ),

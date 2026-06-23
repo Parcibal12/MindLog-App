@@ -37,6 +37,7 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pin = ref.watch(pinProvider);
     final authState = ref.watch(loginControllerProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     ref.listen<AuthState>(loginControllerProvider, (previous, next) {
       if (next == AuthState.authenticated) {
@@ -46,15 +47,15 @@ class LoginScreen extends ConsumerWidget {
     });
 
     if (authState == AuthState.checking || authState == AuthState.authenticated) {
-      return const Scaffold(
-        backgroundColor: AppColors.backgroundWhite,
-        body: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+      return Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
+        body: const Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
       );
     }
 
     String title = "Bienvenido a MindLog";
     String subtitle = "Ingresa tu PIN";
-    Color subtitleColor = AppColors.textSubtitle;
+    Color subtitleColor = isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle;
 
     switch (authState) {
       case AuthState.creatingPin:
@@ -72,14 +73,14 @@ class LoginScreen extends ConsumerWidget {
       case AuthState.error:
         title = "Acceso Denegado";
         subtitle = "PIN incorrecto. Intenta de nuevo.";
-        subtitleColor = Colors.redAccent;
+        subtitleColor = AppColors.errorRed;
         break;
       default:
         break;
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundWhite,
+      backgroundColor: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWeb = constraints.maxWidth > 600;
@@ -89,7 +90,7 @@ class LoginScreen extends ConsumerWidget {
               width: isWeb ? 400 : double.infinity,
               height: isWeb ? 850 : double.infinity,
               decoration: isWeb ? BoxDecoration(
-                color: AppColors.backgroundWhite,
+                color: isDark ? AppColors.darkBackground : AppColors.backgroundWhite,
                 borderRadius: BorderRadius.circular(40),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30, spreadRadius: 5)
@@ -116,7 +117,7 @@ class LoginScreen extends ConsumerWidget {
                                 ),
                               ),
                               const SizedBox(height: 32),
-                              Text(title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textHeader)),
+                              Text(title, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
                               const SizedBox(height: 8),
                               Text(subtitle, style: TextStyle(fontSize: 14, color: subtitleColor, fontWeight: authState == AuthState.error ? FontWeight.bold : FontWeight.normal)),
                               const SizedBox(height: 40),
@@ -131,8 +132,7 @@ class LoginScreen extends ConsumerWidget {
                                     height: 14,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: isFilled ? AppColors.primaryGreen : AppColors.indicatorInactive,
-                                      boxShadow: isFilled ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), offset: const Offset(0, 1), blurRadius: 2)] : null,
+                                      color: isFilled ? AppColors.primaryGreen : (isDark ? AppColors.darkIndicatorInactive : AppColors.indicatorInactive),
                                     ),
                                   );
                                 }),
@@ -142,13 +142,8 @@ class LoginScreen extends ConsumerWidget {
                               if (authState == AuthState.enteringPin)
                                 TextButton(
                                   onPressed: () {},
-                                  child: const Text("¿Olvidaste tu PIN?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryDark, letterSpacing: 0.3)),
+                                  child: Text("¿Olvidaste tu PIN?", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? AppColors.secondaryGreen : AppColors.primaryDark, letterSpacing: 0.3)),
                                 ),
-                              const SizedBox(width: 8),
-                              IconButton(
-                                icon: const Icon(Icons.fingerprint, color: AppColors.primaryGreen, size: 32),
-                                onPressed: () => ref.read(loginControllerProvider.notifier).triggerBiometrics(),
-                              ),
                             ],
                           ),
                         ),
