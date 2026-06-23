@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
@@ -60,7 +61,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Diario guardado con éxito"), backgroundColor: AppColors.primaryGreen),
         );
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        context.go('/home');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Error al guardar en el servidor"), backgroundColor: AppColors.errorRed),
@@ -318,7 +319,7 @@ class _LabeledScreenState extends ConsumerState<LabeledScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.chevron_left, size: 28, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                   const SizedBox(width: 8),
                   Text("Detalles de entrada", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),

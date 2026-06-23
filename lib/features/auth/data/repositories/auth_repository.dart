@@ -1,39 +1,49 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
+import '../../domain/repositories/auth_repository_contract.dart';
+
+final authRepositoryProvider = Provider<AuthRepositoryContract>((ref) {
   return AuthRepository();
 });
 
-class AuthRepository {
+class AuthRepository implements AuthRepositoryContract {
   final Box _vaultBox = Hive.box('privacyVault');
   final LocalAuthentication _auth = LocalAuthentication();
 
+  @override
   bool get hasPin => _vaultBox.containsKey('user_pin');
 
+  @override
   Future<void> savePin(String pin) async {
     await _vaultBox.put('user_pin', pin);
   }
 
+  @override
   bool validatePin(String pin) {
     final storedPin = _vaultBox.get('user_pin');
     return storedPin == pin;
   }
 
-  bool get isBiometricsEnabled => _vaultBox.get('use_biometrics', defaultValue: true);
+  @override
+  bool get isBiometricsEnabled =>
+      _vaultBox.get('use_biometrics', defaultValue: true);
 
+  @override
   Future<void> setBiometricsEnabled(bool value) async {
     await _vaultBox.put('use_biometrics', value);
   }
 
+  @override
   Future<bool> authenticateWithBiometrics() async {
     if (kIsWeb || !isBiometricsEnabled) return false;
 
     try {
       final canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+      final canAuthenticate =
+          canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
 
       if (!canAuthenticate) return false;
 

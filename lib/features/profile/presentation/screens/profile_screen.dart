@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
+import '../../../../core/platform/device_info_provider.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../providers/profile_controller.dart';
 
@@ -11,11 +14,27 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+
+
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool autoSend = true;
   bool biometrics = true;
   bool reportSent = false;
-  final TextEditingController _emailController = TextEditingController();
+  late final TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    final box = Hive.box('privacyVault');
+    final savedEmail = box.get('therapist_email', defaultValue: '');
+    _emailController = TextEditingController(text: savedEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
 
   void _handleGenerateReport() async {
     final email = _emailController.text.trim();
@@ -42,6 +61,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (mounted) {
       if (success) {
+        Hive.box('privacyVault').put('therapist_email', email);
         setState(() => reportSent = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Perfil actualizado y reporte enviado"), backgroundColor: AppColors.primaryGreen),
@@ -67,6 +87,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final currentThemeMode = ref.watch(themeProvider);
     final isDarkModeActive = currentThemeMode == ThemeMode.dark;
 
+    final deviceNameAsync = ref.watch(deviceNameProvider);
+    final osVersionAsync = ref.watch(osVersionProvider);
+    
+    final deviceInfoText = deviceNameAsync.when(
+      data: (name) => osVersionAsync.when(
+        data: (os) => 'MindLog v2.0 - Corriendo en $name ($os)',
+        loading: () => 'MindLog v2.0 - Obteniendo info...',
+        error: (_, __) => 'MindLog v2.0 - Multiplataforma',
+      ),
+      loading: () => 'MindLog v2.0 - Obteniendo info...',
+      error: (_, __) => 'MindLog v2.0 - Multiplataforma',
+    );
+
     return Scaffold(
       body: Stack(
         children: [
@@ -80,7 +113,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.chevron_left, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, size: 28),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(),
                   ),
                   const SizedBox(width: 8),
                   Text("Mi Perfil", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
@@ -302,7 +335,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
 
                   Center(
-                    child: Text("MindLog v2.0 - Multiplataforma", style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
+                    child: Text(deviceInfoText, style: TextStyle(fontSize: 10, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle)),
                   ),
                 ],
               ),

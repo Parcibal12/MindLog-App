@@ -22,6 +22,7 @@ class SyncService {
         _ref.invalidate(currentStreakProvider);
       }
     } catch (e) {
+      // Ignorar error de sincronización silenciosa
     }
   }
 }

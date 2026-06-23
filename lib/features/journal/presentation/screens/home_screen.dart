@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
 import '../../../../core/providers/network_provider.dart';
 import '../../data/models/journal_dto.dart';
 import '../providers/home_controller.dart';
@@ -62,7 +62,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                      context.push('/profile');
                     },
                     child: Container(
                       width: 40,

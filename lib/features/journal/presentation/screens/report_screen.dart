@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/report_controller.dart';
 import '../providers/home_controller.dart';
 import '../providers/journal_draft_provider.dart';
-import 'calendar_screen.dart';
 import 'dart:math';
 
 class ReportScreen extends ConsumerWidget {
@@ -113,7 +113,7 @@ class ReportScreen extends ConsumerWidget {
                         ),
 
                         GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CalendarScreen())),
+                          onTap: () => context.push('/calendar'),
                           child: Container(
                             margin: const EdgeInsets.all(24),
                             padding: const EdgeInsets.all(20),

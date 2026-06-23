@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../providers/journal_draft_provider.dart';
 import '../providers/editor_controller.dart';
-import 'labeled_screen.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
   const EditorScreen({super.key});
@@ -38,10 +38,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       ref.read(draftIntensityProvider.notifier).state = aiResult["intensity"];
       ref.read(draftContextTagsProvider.notifier).state = aiResult["contextTagIds"];
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LabeledScreen()),
-      );
+      context.push('/labeled');
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Error al analizar el texto"), backgroundColor: AppColors.errorRed),
@@ -66,7 +63,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.close, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                   Column(
                     children: [

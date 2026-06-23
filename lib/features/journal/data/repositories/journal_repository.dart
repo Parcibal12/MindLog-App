@@ -1,31 +1,17 @@
-import 'dart:io';
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../datasources/remote/journal_api_client.dart';
-import '../models/journal_dto.dart';
-import '../models/analytics_dto.dart';
-import '../models/metadata_dto.dart';
+
+import '../../../../core/constants/user_constants.dart';
+import '../../../../core/network/dio_provider.dart';
 import '../../../../core/providers/network_provider.dart';
-
-class ApiConfig {
-  static const String _port = "5135"; 
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:$_port/api/';
-    if (Platform.isAndroid) return 'http://10.0.2.2:$_port/api/';
-    return 'http://localhost:$_port/api/';
-  }
-}
-
-final dioProvider = Provider<Dio>((ref) {
-  return Dio(BaseOptions(
-    baseUrl: ApiConfig.baseUrl,
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
-  ));
-});
+import '../datasources/remote/journal_api_client.dart';
+import '../models/analytics_dto.dart';
+import '../models/journal_dto.dart';
+import '../models/metadata_dto.dart';
 
 final journalApiClientProvider = Provider<JournalApiClient>((ref) {
   final dio = ref.read(dioProvider);
@@ -41,15 +27,16 @@ class JournalRepository {
   final JournalApiClient _apiClient;
   final Ref _ref;
   final Box<String> _offlineBox = Hive.box<String>('offline_journals');
-  final Box _cacheBox = Hive.box('privacyVault'); 
+  final Box _cacheBox = Hive.box('privacyVault');
 
   JournalRepository(this._apiClient, this._ref);
 
   bool _isOfflineError(DioException e) {
-    final isOffline = e.type == DioExceptionType.connectionTimeout || 
-                      e.type == DioExceptionType.receiveTimeout || 
-                      e.type == DioExceptionType.connectionError ||
-                      e.error is SocketException;
+    final isOffline =
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError ||
+        e.error is SocketException;
     if (isOffline) {
       _ref.read(isOfflineModeProvider.notifier).state = true;
     }
@@ -61,24 +48,33 @@ class JournalRepository {
   }
 
   Future<void> createEntry({
-    required String content, required int emotionId, required String emotionName,
-    required int intensity, required List<int> contextTagIds, 
-    required String aiFeedback, required String aiPattern
+    required String content,
+    required int emotionId,
+    required String emotionName,
+    required int intensity,
+    required List<int> contextTagIds,
+    required String aiFeedback,
+    required String aiPattern,
   }) async {
     final dto = JournalDto(
-      userId: "648bea7c-175d-4caa-8c3b-1ea519b93e46", content: content,
-      emotionId: emotionId, emotionName: emotionName, intensity: intensity,
-      contextTagIds: contextTagIds, createdAt: DateTime.now(),
-      aiFeedback: aiFeedback, aiPattern: aiPattern,
+      userId: UserConstants.currentUserId,
+      content: content,
+      emotionId: emotionId,
+      emotionName: emotionName,
+      intensity: intensity,
+      contextTagIds: contextTagIds,
+      createdAt: DateTime.now(),
+      aiFeedback: aiFeedback,
+      aiPattern: aiPattern,
     );
 
     try {
       await _apiClient.createEntry(dto.toJson());
-      _setOnline(); 
+      _setOnline();
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
         await _offlineBox.add(jsonEncode(dto.toJson()));
-        return; 
+        return;
       }
       throw Exception("Error del servidor al enviar el diario.");
     }
@@ -88,16 +84,21 @@ class JournalRepository {
     try {
       final remoteEntries = await _apiClient.getEntries();
       _setOnline();
-      await _cacheBox.put('cached_entries', jsonEncode(remoteEntries.map((e) => e.toJson()).toList()));
+      await _cacheBox.put(
+        'cached_entries',
+        jsonEncode(remoteEntries.map((e) => e.toJson()).toList()),
+      );
       return remoteEntries;
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
         final cached = _cacheBox.get('cached_entries');
         if (cached != null) {
           final List<dynamic> decoded = jsonDecode(cached);
-          return decoded.map((e) => JournalDto.fromJson(e as Map<String, dynamic>)).toList();
+          return decoded
+              .map((e) => JournalDto.fromJson(e as Map<String, dynamic>))
+              .toList();
         }
-        return []; 
+        return [];
       }
       throw Exception("Error al obtener los diarios: $e");
     }
@@ -112,13 +113,17 @@ class JournalRepository {
         "pattern": data["pattern"]?.toString() ?? "NEUTRAL",
         "emotionId": data["emotionId"] as int? ?? 1,
         "intensity": data["intensity"] as int? ?? 5,
-        "contextTagIds": List<int>.from(data["contextTagIds"] ?? [])
+        "contextTagIds": List<int>.from(data["contextTagIds"] ?? []),
       };
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
         return {
-          "feedback": "Modo sin conexión. Tu diario se guardará en tu bóveda de privacidad.",
-          "pattern": "OFFLINE", "emotionId": 1, "intensity": 5, "contextTagIds": <int>[]
+          "feedback":
+              "Modo sin conexión. Tu diario se guardará en tu bóveda de privacidad.",
+          "pattern": "OFFLINE",
+          "emotionId": 1,
+          "intensity": 5,
+          "contextTagIds": <int>[],
         };
       }
       throw Exception("Error del servidor en la IA.");
@@ -129,7 +134,10 @@ class JournalRepository {
     try {
       final remoteAnalytics = await _apiClient.getAnalytics();
       _setOnline();
-      await _cacheBox.put('cached_analytics', jsonEncode(remoteAnalytics.toJson()));
+      await _cacheBox.put(
+        'cached_analytics',
+        jsonEncode(remoteAnalytics.toJson()),
+      );
       return remoteAnalytics;
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
@@ -138,7 +146,9 @@ class JournalRepository {
           final Map<String, dynamic> decoded = jsonDecode(cached);
           return AnalyticsDto.fromJson(decoded);
         }
-        throw const SocketException("Sin conexión a internet y sin datos locales previos.");
+        throw const SocketException(
+          "Sin conexión a internet y sin datos locales previos.",
+        );
       }
       throw Exception("Error al obtener analíticas: $e");
     }
@@ -148,14 +158,19 @@ class JournalRepository {
     try {
       final remoteEmotions = await _apiClient.getEmotions();
       _setOnline();
-      await _cacheBox.put('cached_emotions', jsonEncode(remoteEmotions.map((e) => e.toJson()).toList()));
+      await _cacheBox.put(
+        'cached_emotions',
+        jsonEncode(remoteEmotions.map((e) => e.toJson()).toList()),
+      );
       return remoteEmotions;
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
         final cached = _cacheBox.get('cached_emotions');
         if (cached != null) {
           final List<dynamic> decoded = jsonDecode(cached);
-          return decoded.map((e) => EmotionDto.fromJson(e as Map<String, dynamic>)).toList();
+          return decoded
+              .map((e) => EmotionDto.fromJson(e as Map<String, dynamic>))
+              .toList();
         }
         return [];
       }
@@ -167,14 +182,19 @@ class JournalRepository {
     try {
       final remoteTags = await _apiClient.getContextTags();
       _setOnline();
-      await _cacheBox.put('cached_contexts', jsonEncode(remoteTags.map((e) => e.toJson()).toList()));
+      await _cacheBox.put(
+        'cached_contexts',
+        jsonEncode(remoteTags.map((e) => e.toJson()).toList()),
+      );
       return remoteTags;
     } on DioException catch (e) {
       if (_isOfflineError(e)) {
         final cached = _cacheBox.get('cached_contexts');
         if (cached != null) {
           final List<dynamic> decoded = jsonDecode(cached);
-          return decoded.map((e) => ContextTagDto.fromJson(e as Map<String, dynamic>)).toList();
+          return decoded
+              .map((e) => ContextTagDto.fromJson(e as Map<String, dynamic>))
+              .toList();
         }
         return [];
       }
@@ -186,9 +206,9 @@ class JournalRepository {
     try {
       final response = await _apiClient.getCurrentStreak(userId);
       _setOnline();
-      return response.currentStreak; 
+      return response.currentStreak;
     } catch (e) {
-      return 0; 
+      return 0;
     }
   }
 

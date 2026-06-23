@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../domain/repositories/auth_repository_contract.dart';
 
 enum AuthState {
   checking,
@@ -7,16 +8,17 @@ enum AuthState {
   confirmingPin,
   enteringPin,
   authenticated,
-  error
+  error,
 }
 
-final loginControllerProvider = StateNotifierProvider<LoginController, AuthState>((ref) {
-  final repository = ref.read(authRepositoryProvider);
-  return LoginController(repository);
-});
+final loginControllerProvider =
+    StateNotifierProvider<LoginController, AuthState>((ref) {
+      final repository = ref.read(authRepositoryProvider);
+      return LoginController(repository);
+    });
 
 class LoginController extends StateNotifier<AuthState> {
-  final AuthRepository _repository;
+  final AuthRepositoryContract _repository;
   String _temporalPin = '';
 
   LoginController(this._repository) : super(AuthState.checking) {
@@ -34,7 +36,7 @@ class LoginController extends StateNotifier<AuthState> {
 
   Future<void> triggerBiometrics() async {
     if (state != AuthState.enteringPin) return;
-    
+
     final success = await _repository.authenticateWithBiometrics();
     if (success) {
       state = AuthState.authenticated;
@@ -54,7 +56,7 @@ class LoginController extends StateNotifier<AuthState> {
           state = AuthState.authenticated;
         } else {
           _temporalPin = '';
-          state = AuthState.error; 
+          state = AuthState.error;
           Future.delayed(const Duration(seconds: 1), () {
             if (mounted) state = AuthState.creatingPin;
           });

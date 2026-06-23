@@ -142,7 +142,7 @@ class _WidgetCatalogScreenState extends State<WidgetCatalogScreen> {
   Widget _buildSectionHeader(String title, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(left: BorderSide(color: AppColors.primaryGreen, width: 4)),
       ),
       child: Text(

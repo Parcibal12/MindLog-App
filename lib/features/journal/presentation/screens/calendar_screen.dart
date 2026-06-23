@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import '../providers/home_controller.dart';
 
@@ -49,7 +50,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   IconButton(
                     icon: Icon(Icons.chevron_left, color: isDark ? AppColors.darkTextSubtitle : AppColors.textSubtitle, size: 28),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () => context.pop(),
                   ),
                   const SizedBox(width: 8),
                   Text("Calendario Emocional", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? AppColors.darkTextHeader : AppColors.textHeader)),
