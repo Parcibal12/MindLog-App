@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/journal/presentation/screens/main_layout_screen.dart';
 import '../../features/journal/presentation/screens/editor_screen.dart';
+import '../../features/journal/presentation/screens/widget_catalog_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -21,6 +22,11 @@ final appRouter = GoRouter(
       path: '/write',
       name: 'write',
       builder: (context, state) => const EditorScreen(),
+    ),
+
+    GoRoute(
+      path: '/catalog',
+      builder: (context, state) => const WidgetCatalogScreen(),
     ),
   ],
 );
