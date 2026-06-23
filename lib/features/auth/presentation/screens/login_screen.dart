@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:go_router/go_router.dart';
-import '../../../journal/presentation/screens/main_layout_screen.dart';
+import '../../../journal/presentation/providers/sync_provider.dart';
 import '../providers/login_controller.dart';
 
 final pinProvider = StateProvider<String>((ref) => '');
@@ -40,6 +40,7 @@ class LoginScreen extends ConsumerWidget {
 
     ref.listen<AuthState>(loginControllerProvider, (previous, next) {
       if (next == AuthState.authenticated) {
+        ref.read(syncServiceProvider).runSilentSync();
         context.go('/home');
       }
     });

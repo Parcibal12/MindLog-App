@@ -3,14 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mindlog_design_system/mindlog_design_system.dart';
 import 'package:mindlog_app/core/utils/date_formatter.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
-import '../providers/home_controller.dart';
+import '../../../../core/providers/network_provider.dart';
 import '../../data/models/journal_dto.dart';
+import '../providers/home_controller.dart';
+import '../providers/sync_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isOffline = ref.watch(isOfflineModeProvider);
     final entriesAsyncValue = ref.watch(journalEntriesProvider);
 
     return Scaffold(
@@ -18,6 +21,25 @@ class HomeScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              height: isOffline ? 40 : 0,
+              width: double.infinity,
+              color: const Color(0xFFFFA000),
+              child: isOffline
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_off, color: Colors.white, size: 16),
+                        SizedBox(width: 8),
+                        Text(
+                          "Modo sin conexión - Viendo datos locales",
+                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
               child: Row(
@@ -164,129 +186,153 @@ class _FilledStateState extends ConsumerState<_FilledState> {
     final palette = EmotionThemeMapper.getPalette(dominantEmotion);
     final streakAsync = ref.watch(currentStreakProvider);
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: 24),
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: MindLogTextField(
-            hintText: "Buscar en tu diario...",
-            prefixIcon: Icons.search,
-            controller: _searchController,
-          ),
-        ),
-
-        Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: palette.gradient,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: palette.shadow, offset: const Offset(0, 10), blurRadius: 15)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("TU SEMANA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFF0FDFA), letterSpacing: 0.6)),
-              const SizedBox(height: 8),
-              Text("${widget.entries.length} registros totales", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-              const SizedBox(height: 16), 
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.eco, color: Color(0xFFF0FDFA), size: 16),
-                    const SizedBox(width: 8),
-                    Text("Principal: $dominantEmotion", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
-                  ],
-                ),
+    return RefreshIndicator(
+      color: AppColors.primaryGreen,
+      onRefresh: () async {
+        await Future.delayed(const Duration(seconds: 1));
+        
+        await ref.read(syncServiceProvider).runSilentSync();
+        ref.invalidate(journalEntriesProvider);
+        ref.invalidate(currentStreakProvider);
+        
+        try { 
+          await ref.read(journalEntriesProvider.future); 
+          if (ref.read(isOfflineModeProvider) && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
+                backgroundColor: Color(0xFFFFA000),
+                duration: Duration(seconds: 2),
               ),
-            ],
+            );
+          }
+        } catch (_) {}
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 24),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: MindLogTextField(
+              hintText: "Buscar en tu diario...",
+              prefixIcon: Icons.search,
+              controller: _searchController,
+            ),
           ),
-        ),
 
-        streakAsync.when(
-          data: (streak) => MindLogCard(
-            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
+          Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: palette.gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: palette.shadow, offset: const Offset(0, 10), blurRadius: 15)],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
+                const Text("TU SEMANA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFF0FDFA), letterSpacing: 0.6)),
+                const SizedBox(height: 8),
+                Text("${widget.entries.length} registros totales", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 16), 
                 Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFF7ED),
-                    shape: BoxShape.circle,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                   ),
-                  child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF97316), size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        streak > 0 ? "¡Racha de $streak días!" : "Inicia tu racha hoy",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textHeader),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        streak > 0 ? "Sigue escribiendo para no perderla." : "Registra cómo te sientes.",
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle),
-                      ),
+                      const Icon(Icons.eco, color: Color(0xFFF0FDFA), size: 16),
+                      const SizedBox(width: 8),
+                      Text("Principal: $dominantEmotion", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white)),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
-          ),
-          error: (_, __) => const SizedBox.shrink(),
-        ),
 
-        const SizedBox(height: 8),
-
-        if (filteredEntries.isEmpty && searchQuery.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Center(
-              child: Text(
-                'No se encontraron resultados para "$searchQuery"',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSubtitle),
+          streakAsync.when(
+            data: (streak) => MindLogCard(
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFF7ED),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF97316), size: 24),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          streak > 0 ? "¡Racha de $streak días!" : "Inicia tu racha hoy",
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textHeader),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          streak > 0 ? "Sigue escribiendo para no perderla." : "Registra cómo te sientes.",
+                          style: const TextStyle(fontSize: 12, color: AppColors.textSubtitle),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(child: CircularProgressIndicator(color: AppColors.primaryGreen)),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
           ),
 
-        ...groupedEntries.keys.map((dateSection) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          const SizedBox(height: 8),
+
+          if (filteredEntries.isEmpty && searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(32.0),
+              child: Center(
                 child: Text(
-                  dateSection, 
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 0.55)
+                  'No se encontraron resultados para "$searchQuery"',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSubtitle),
                 ),
               ),
-              ...groupedEntries[dateSection]!.map((entry) => _EntryCard(entry: entry)),
-            ],
-          );
-        }),
-      ],
+            ),
+
+          ...groupedEntries.keys.map((dateSection) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  child: Text(
+                    dateSection, 
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSubtitle, letterSpacing: 0.55)
+                  ),
+                ),
+                ...groupedEntries[dateSection]!.map((entry) => _EntryCard(entry: entry)),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 }
@@ -348,42 +394,68 @@ class _EntryCard extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends ConsumerWidget {
   const _EmptyState();
 
   @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 96,
-            height: 96,
-            decoration: BoxDecoration(
-              color: const Color(0xFFCCFBF1),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: const [BoxShadow(color: Color(0x3314B8A6), blurRadius: 20)],
-            ),
-            child: const Icon(Icons.eco_outlined, color: AppColors.primaryGreen, size: 40),
-          ),
-          const SizedBox(height: 24),
-          const Text("Tu lienzo en blanco", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textHeader)),
-          const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text("Aún no hay registros hoy. Tómate un momento para escribir cómo te sientes. Tu mente te lo agradecerá.", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5)),
-          ),
-          const SizedBox(height: 40),
-          const Column(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return RefreshIndicator(
+      color: AppColors.primaryGreen,
+      onRefresh: () async {
+        await Future.delayed(const Duration(seconds: 1));
+        await ref.read(syncServiceProvider).runSilentSync();
+        ref.invalidate(journalEntriesProvider);
+        ref.invalidate(currentStreakProvider);
+        try { 
+          await ref.read(journalEntriesProvider.future); 
+          if (ref.read(isOfflineModeProvider) && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Aún sin red. El diario sigue guardado en tu bóveda."), 
+                backgroundColor: Colors.amber,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (_) {}
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.6,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("COMENZAR", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF5EEAD4), letterSpacing: 1)),
-              SizedBox(height: 4),
-              Icon(Icons.keyboard_arrow_down, color: Color(0xFF5EEAD4)),
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCCFBF1),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  boxShadow: const [BoxShadow(color: Color(0x3314B8A6), blurRadius: 20)],
+                ),
+                child: const Icon(Icons.eco_outlined, color: AppColors.primaryGreen, size: 40),
+              ),
+              const SizedBox(height: 24),
+              const Text("Tu lienzo en blanco", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textHeader)),
+              const SizedBox(height: 8),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 32.0),
+                child: Text("Aún no hay registros hoy. Tómate un momento para escribir cómo te sientes. Tu mente te lo agradecerá.", textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Color(0xFF64748B), height: 1.5)),
+              ),
+              const SizedBox(height: 40),
+              const Column(
+                children: [
+                  Text("COMENZAR", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF5EEAD4), letterSpacing: 1)),
+                  SizedBox(height: 4),
+                  Icon(Icons.keyboard_arrow_down, color: Color(0xFF5EEAD4)),
+                ],
+              )
             ],
-          )
-        ],
+          ),
+        ),
       ),
     );
   }
